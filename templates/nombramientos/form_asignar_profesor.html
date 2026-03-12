@@ -1,0 +1,59 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<h1>Vincular Profesor a Nombramiento</h1>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color: #cccccc; display: block; margin-top: 0.25rem;">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div style="color: #e94560; font-size: 0.9em; margin-top: 0.25rem;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+                <div style="background-color: #e94560; color: #ffffff; padding: 1rem; border-radius: 4px;">
+                    {% for error in form.non_field_errors %}
+                        <p style="margin: 0;">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="javascript:history.back()" class="btn" style="background-color: #1a1a2e;">Cancelar</a>
+            <button type="submit" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Guardar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Si viene el ID del nombramiento por GET, auto-seleccionarlo y deshabilitarlo
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const nomb_id = urlParams.get('nomb');
+        if (nomb_id) {
+            const select = document.getElementById('id_nombramiento');
+            if(select) {
+                select.value = nomb_id;
+                // Clona el select, escóndelo como campo oculto para que Django lo reciba
+                let hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = select.name;
+                hiddenInput.value = nomb_id;
+                select.parentNode.insertBefore(hiddenInput, select);
+                select.disabled = true;
+            }
+        }
+    });
+</script>
+{% endblock %}

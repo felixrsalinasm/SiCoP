@@ -1,0 +1,35 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<h1>{% if form.instance.pk %}Editar Nombramiento{% else %}Nuevo Nombramiento{% endif %}</h1>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color: #cccccc; display: block; margin-top: 0.25rem;">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.name == 'archivo' and form.instance.archivo %}
+                    <small style="color: #4facfe; display: block; margin-top: 0.5rem;">Archivo actual: <a href="{{ form.instance.archivo.url }}" target="_blank" style="color: #f6d365;">Descargar</a></small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div style="color: #e94560; font-size: 0.9em; margin-top: 0.25rem;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'nombramientos:lista_nombramientos' %}" class="btn" style="background-color: #1a1a2e;">Cancelar</a>
+            <button type="submit" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

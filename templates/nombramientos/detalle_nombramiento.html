@@ -1,0 +1,117 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Detalle de Nombramiento</h1>
+    <div>
+        {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'nombramientos:editar_nombramiento' nombramiento.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        <a href="{% url 'nombramientos:lista_nombramientos' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div><strong>Clave:</strong> {{ nombramiento.clave }}</div>
+    <div><strong>Tipo:</strong> {{ nombramiento.tipo.nombramiento }} ({{ nombramiento.tipo.get_origen_display }})</div>
+    <div><strong>Fecha de emisión:</strong> {{ nombramiento.fecha_emision }}</div>
+    <div><strong>Fecha de vencimiento:</strong> {{ nombramiento.fecha_vencimiento }}</div>
+    <div><strong>Vigente:</strong> 
+        {% if nombramiento.esta_vigente %}
+            <span style="color: #28a745; font-weight: bold;">Sí</span>
+        {% else %}
+            <span style="color: #dc3545; font-weight: bold;">No</span>
+        {% endif %}
+    </div>
+    <div><strong>Archivo cargado:</strong> 
+        {% if nombramiento.archivo %}
+            <a href="{{ nombramiento.archivo.url }}" target="_blank" style="color: #f6d365;">Descargar archivo adjunto</a>
+        {% else %}
+            <span style="color: #cccccc;">Ninguno</span>
+        {% endif %}
+    </div>
+    <div style="grid-column: 1 / -1;"><strong>Observaciones:</strong> <br> {{ nombramiento.observaciones|default:'Ninguna' }}</div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: #4facfe;">Profesores Asociados</h2>
+            {% if user.es_admin or user.es_secretaria %}
+            <a href="{% url 'nombramientos:asignar_profesor' %}?nomb={{ nombramiento.pk }}" class="btn" style="background-color: #4facfe; color: #1a1a2e; font-size: 0.8em;">Vincular Profesor</a>
+            {% endif %}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+            <thead style="background-color: #0f3460;">
+                <tr>
+                    <th style="padding: 1rem; text-align: left;">Profesor</th>
+                    {% if user.es_admin %}
+                    <th style="padding: 1rem; text-align: center;">Acción</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for asignacion in nombramiento.nombramientos_profesor.all %}
+                <tr style="border-bottom: 1px solid #0f3460;">
+                    <td style="padding: 1rem;">
+                        {{ asignacion.profesor.get_grado_academico_display }} {{ asignacion.profesor.persona.nombre_completo }}
+                    </td>
+                    {% if user.es_admin %}
+                    <td style="padding: 1rem; text-align: center;">
+                        <form method="post" action="{% url 'nombramientos:eliminar_nombramiento_profesor' asignacion.pk %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: none; border: none; color: #e94560; cursor: pointer; text-decoration: underline;">Desvincular</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="padding: 1rem; text-align: center;">No hay profesores asignados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: #f6d365;">Programas Asociados</h2>
+            {% if user.es_admin %}
+            <a href="{% url 'nombramientos:asignar_programa' %}?nomb={{ nombramiento.pk }}" class="btn" style="background-color: #f6d365; color: #1a1a2e; font-size: 0.8em;">Vincular Programa</a>
+            {% endif %}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+            <thead style="background-color: #0f3460;">
+                <tr>
+                    <th style="padding: 1rem; text-align: left;">Programa</th>
+                    {% if user.es_admin %}
+                    <th style="padding: 1rem; text-align: center;">Acción</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for asignacion in nombramiento.programas_nombramiento.all %}
+                <tr style="border-bottom: 1px solid #0f3460;">
+                    <td style="padding: 1rem;">
+                        {{ asignacion.programa.siglas }} - {{ asignacion.programa.nombre }}
+                    </td>
+                    {% if user.es_admin %}
+                    <td style="padding: 1rem; text-align: center;">
+                        <form method="post" action="{% url 'nombramientos:eliminar_nombramiento_programa' asignacion.pk %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: none; border: none; color: #e94560; cursor: pointer; text-decoration: underline;">Desvincular</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="padding: 1rem; text-align: center;">No hay programas asignados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
