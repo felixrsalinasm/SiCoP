@@ -28,8 +28,8 @@
         <tr style="border-bottom: 1px solid #1a1a2e;">
             <td style="padding: 1rem;">{{ persona.nombre_completo }}</td>
             <td style="padding: 1rem;">{{ persona.email }}</td>
-            <td style="padding: 1rem; text-align: center;">{% if hasattr persona 'profesor' %}Sí{% else %}No{% endif %}</td>
-            <td style="padding: 1rem; text-align: center;">{% if hasattr persona 'estudiante' %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{% if persona.profesor %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{% if persona.estudiante %}Sí{% else %}No{% endif %}</td>
             <td style="padding: 1rem; text-align: center;">
                 <a href="{% url 'personas:detalle_persona' persona.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
                 {% if user.es_admin or user.es_secretaria %}
