@@ -1,90 +1,53 @@
-# Sistema de Coordinación de Posgrado (SiCoP) - CIC-IPN
+<div align="center">
 
-Bienvenido al repositorio oficial del **Sistema de Coordinación de Posgrado (SiCoP)**, un sistema web administrativo diseñado desde cero para el Centro de Investigación en Computación (CIC) del Instituto Politécnico Nacional (IPN) de México.
+# SiCoP — Sistema de Coordinación de Posgrado
 
-## Descripción del Sistema
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![PEP8](https://img.shields.io/badge/code%20style-PEP%208-brightgreen?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-11%20passed-success?style=for-the-badge)
 
-**SiCoP** es una plataforma orientada a la gestión integral de programas de posgrado (maestrías y doctorados) del CIC-IPN. Automatiza, valida y documenta procesos académicos basados rigurosamente en el **Reglamento de Estudios de Posgrado del IPN**, cubriendo:
+Sistema web administrativo para la gestión integral de programas de posgrado del Centro de Investigación en Computación CIC — Instituto Politécnico Nacional.
+</div>
 
-- **Personas**: Gestión completa de profesores (con grado y laboratorio) y estudiantes (con matrícula y generación).
-- **Programas**: Administración de programas de posgrado (MCC, MCIC, MCyTIAyCD, DCC, DCyTIAyCD) y laboratorios.
-- **Roles y Accesos**: Sistema seguro de autenticación con 4 perfiles principales (Administrador, Coordinador, Secretaría, Profesor).
-- **Academia y Tesis**: Control estricto de restricciones institucionales (máximo 2 directores de tesis activos por alumno, máximo 4 alumnos simultáneos por director). Conformación de Comités Tutoriales y Jurados de Examen.
+---
 
-Todo el desarrollo se encuentra realizado en **Python** & **Django** con cumplimiento estricto del estándar PEP-8.
+## ¿Qué es SiCoP?
+SiCoP automatiza, valida y documenta los procesos académicos del posgrado del CIC-IPN con base en el Reglamento de Estudios de Posgrado del IPN, cubriendo desde la gestión de personas y programas hasta el control estricto de tesis y comités tutoriales.
 
-## Requisitos Previos
+## Módulos
+- Personas: gestión de profesores y estudiantes
+- Programas: gestión de los cinco programas MCC, MCIC, MCyTIAyCD, DCC y DCyTIAyCD
+- Nombramientos: gestión de distinciones académicas
+- Tesis: control de directores (máximo 2 por alumno), comités y jurados
+- Roles: perfiles de Administrador, Coordinador, Secretaría y Profesor
 
-Asegúrese de contar con las siguientes herramientas en su entorno:
+## Requisitos
+- Python 3.12+
+- pip
 
-- **Python 3.12** o superior
-- **pip** (Manejador de paquetes de Python)
-- **Git** (Opcional, para versionamiento y clonación)
+## Instalación
+1. Clonar el repositorio desde https://github.com/felixrsalinasm/SiCoP.git
+2. Crear y activar entorno virtual en Windows con `venv\Scripts\activate` y en Linux/Mac con `source venv/bin/activate`
+3. Instalar dependencias con `pip install -r requirements.txt`
+4. Aplicar migraciones con `python manage.py makemigrations` y `python manage.py migrate`
+5. Cargar datos de prueba opcionales con `python scripts/datos_prueba.py`
+6. Iniciar servidor con `python manage.py runserver`
 
-## Instalación y Despliegue Local
-
-Siga los siguientes pasos para ejecutar SiCoP en su máquina local:
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone <URL_DEL_REPOSITORIO>
-   cd SiCoP
-   ```
-
-2. **Crear y activar el entorno virtual**
-   ```bash
-   # En Windows
-   python -m venv venv
-   venv\Scripts\activate
-
-   # En Linux/Mac
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Instalar dependencias**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Aplicar migraciones de la base de datos**
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-5. **Cargar los datos de prueba (Opcional)**
-   El sistema incluye un script idempotente que poblará la base de datos con laboratorios, programas, catálogos, y usuarios pre-configurados:
-   ```bash
-   python scripts/datos_prueba.py
-   ```
-
-6. **Iniciar el servidor de desarrollo**
-   ```bash
-   python manage.py runserver
-   ```
-   El sistema estará disponible en [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+http://127.0.0.1:8000
 
 ## Usuarios de Prueba
+Nota: Requiere `datos_prueba.py` ejecutado previamente.
 
-Si ejecutó el paso de `datos_prueba.py`, podrá ingresar al sistema con los siguientes usuarios (distintos roles para probar las vistas):
-
-| Rol / Perfil | Usuario | Contraseña |
-| --- | --- | --- |
-| **Coordinador** | `coordinador1` | `Coord1234!` |
-| **Secretaría** | `secretaria1` | `Secr1234!` |
-| **Profesor 1** | `profesor1` | `Prof1234!` |
-| **Profesor 2** | `profesor2` | `Prof1234!` |
-
-*(Nota: Todos los accesos se prueban en la ruta redirigida de `/cuentas/login/` automáticamente si ingresa al index del sistema).*
+| Usuario | Contraseña |
+|---|---|
+| coordinador1 | Coord1234! |
+| secretaria1 | Secr1234! |
+| profesor1 | Prof1234! |
+| profesor2 | Prof1234! |
 
 ## Pruebas Automatizadas
+`python manage.py test apps --verbosity=2`
 
-El sistema cuenta con un set de pruebas de integración para validar reglas de negocio. Para ejecutarlas:
-```bash
-python manage.py test apps --verbosity=2
-```
-
-## Créditos
-
-Sistema desarrollado para el **Centro de Investigación en Computación (CIC)** del **Instituto Politécnico Nacional (IPN)**. Construido con arquitectura limpia en Django, enfocado en resiliencia y automatización de validaciones.
+11 pruebas de integración cubriendo autenticación, permisos por rol, validaciones de negocio y restricciones de tesis.
