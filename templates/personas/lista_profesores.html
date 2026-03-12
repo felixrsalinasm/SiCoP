@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Profesores</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:crear_profesor' %}" class="btn">Nuevo profesor</a>
+    {% endif %}
+</div>
+
+<form method="get" style="margin-bottom: 2rem;">
+    <input type="text" name="q" placeholder="Buscar por nombre o apellido" value="{{ request.GET.q|default:'' }}" style="padding: 0.5rem; width: 300px; border-radius: 4px; border: none;">
+    <button type="submit" class="btn">Buscar</button>
+</form>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead>
+        <tr style="background-color: #e94560;">
+            <th style="padding: 1rem; text-align: left;">Nombre completo</th>
+            <th style="padding: 1rem; text-align: left;">Grado</th>
+            <th style="padding: 1rem; text-align: left;">Laboratorio</th>
+            <th style="padding: 1rem; text-align: center;">Externo</th>
+            <th style="padding: 1rem; text-align: center;">Activo</th>
+            <th style="padding: 1rem; text-align: center;">Alumnos activos</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for profesor in profesores %}
+        <tr style="border-bottom: 1px solid #1a1a2e;">
+            <td style="padding: 1rem;">{{ profesor.persona.nombre_completo }}</td>
+            <td style="padding: 1rem;">{{ profesor.get_grado_academico_display }}</td>
+            <td style="padding: 1rem;">{{ profesor.laboratorio.siglas|default:'N/A' }}</td>
+            <td style="padding: 1rem; text-align: center;">{% if profesor.es_externo %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{% if profesor.activo %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{{ profesor.total_alumnos_activos }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'personas:detalle_profesor' profesor.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'personas:editar_profesor' profesor.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="padding: 1rem; text-align: center;">No se encontraron profesores.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

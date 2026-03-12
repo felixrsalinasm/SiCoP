@@ -1,3 +1,268 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.db.models import Q
+from .models import Persona, Profesor, Estudiante
+from .forms import FormularioPersona, FormularioProfesor, FormularioEstudiante
+from apps.cuentas.decoradores import rol_requerido
 
-# Create your views here.
+ROLES_TODO = ['ADMIN', 'COORDINADOR', 'SECRETARIA']
+ROLES_ESCRITURA = ['ADMIN', 'SECRETARIA']
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class ListaPersonas(ListView):
+    model = Persona
+    template_name = 'personas/lista_personas.html'
+    context_object_name = 'personas'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            qs = qs.filter(
+                Q(nombres__icontains=query) |
+                Q(paterno__icontains=query) |
+                Q(email__icontains=query)
+            )
+        return qs
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class DetallePersona(DetailView):
+    model = Persona
+    template_name = 'personas/detalle_persona.html'
+    context_object_name = 'persona'
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class CrearPersona(CreateView):
+    model = Persona
+    form_class = FormularioPersona
+    template_name = 'personas/form_persona.html'
+    success_url = reverse_lazy('personas:lista_personas')
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class EditarPersona(UpdateView):
+    model = Persona
+    form_class = FormularioPersona
+    template_name = 'personas/form_persona.html'
+    success_url = reverse_lazy('personas:lista_personas')
+
+@method_decorator(rol_requerido('ADMIN'), name='dispatch')
+class EliminarPersona(DeleteView):
+    model = Persona
+    template_name = 'personas/confirmar_eliminar.html'
+    success_url = reverse_lazy('personas:lista_personas')
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class ListaProfesores(ListView):
+    model = Profesor
+    template_name = 'personas/lista_profesores.html'
+    context_object_name = 'profesores'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            qs = qs.filter(
+                Q(persona__nombres__icontains=query) |
+                Q(persona__paterno__icontains=query)
+            )
+        return qs
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class CrearProfesor(View):
+    def get(self, request):
+        email = request.GET.get('email', '')
+        persona = Persona.objects.filter(email=email).first() if email else None
+        
+        form_persona = FormularioPersona(instance=persona)
+        form_profesor = FormularioProfesor()
+        
+        if persona:
+            for field in form_persona.fields.values():
+                field.widget.attrs['readonly'] = True
+                
+        return render(request, 'personas/form_profesor.html', {
+            'form_persona': form_persona,
+            'form_profesor': form_profesor,
+            'persona': persona,
+            'email_busqueda': email
+        })
+
+    def post(self, request):
+        email = request.POST.get('email_busqueda')
+        persona = Persona.objects.filter(email=email).first() if email else None
+        
+        form_persona = FormularioPersona(request.POST, request.FILES, instance=persona)
+        form_profesor = FormularioProfesor(request.POST)
+        
+        if persona:
+            if form_profesor.is_valid():
+                profesor = form_profesor.save(commit=False)
+                profesor.persona = persona
+                profesor.save()
+                return redirect('personas:lista_profesores')
+        else:
+            if form_persona.is_valid() and form_profesor.is_valid():
+                persona_nueva = form_persona.save()
+                profesor = form_profesor.save(commit=False)
+                profesor.persona = persona_nueva
+                profesor.save()
+                return redirect('personas:lista_profesores')
+                
+        return render(request, 'personas/form_profesor.html', {
+            'form_persona': form_persona,
+            'form_profesor': form_profesor,
+            'persona': persona,
+            'email_busqueda': email
+        })
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class EditarProfesor(View):
+    def get(self, request, pk):
+        profesor = get_object_or_404(Profesor, pk=pk)
+        form_persona = FormularioPersona(instance=profesor.persona)
+        form_profesor = FormularioProfesor(instance=profesor)
+        return render(request, 'personas/form_profesor.html', {
+            'form_persona': form_persona,
+            'form_profesor': form_profesor,
+            'es_edicion': True
+        })
+
+    def post(self, request, pk):
+        profesor = get_object_or_404(Profesor, pk=pk)
+        form_persona = FormularioPersona(request.POST, request.FILES, instance=profesor.persona)
+        form_profesor = FormularioProfesor(request.POST, instance=profesor)
+        
+        if form_persona.is_valid() and form_profesor.is_valid():
+            form_persona.save()
+            form_profesor.save()
+            return redirect('personas:lista_profesores')
+            
+        return render(request, 'personas/form_profesor.html', {
+            'form_persona': form_persona,
+            'form_profesor': form_profesor,
+            'es_edicion': True
+        })
+
+@method_decorator(rol_requerido(*ROLES_TODO + ['PROFESOR']), name='dispatch')
+class DetalleProfesor(DetailView):
+    model = Profesor
+    template_name = 'personas/detalle_profesor.html'
+    context_object_name = 'profesor'
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class ListaEstudiantes(ListView):
+    model = Estudiante
+    template_name = 'personas/lista_estudiantes.html'
+    context_object_name = 'estudiantes'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        query = self.request.GET.get('q')
+        programa = self.request.GET.get('programa')
+        estado = self.request.GET.get('estado')
+        
+        if query:
+            qs = qs.filter(
+                Q(persona__nombres__icontains=query) |
+                Q(persona__paterno__icontains=query) |
+                Q(matricula__icontains=query)
+            )
+        if programa:
+            qs = qs.filter(programa_id=programa)
+        if estado:
+            qs = qs.filter(estado=estado)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        from apps.programas.models import Programa
+        context = super().get_context_data(**kwargs)
+        context['programas'] = Programa.objects.filter(activo=True)
+        context['estados'] = Estudiante.Estado.choices
+        return context
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class CrearEstudiante(View):
+    def get(self, request):
+        email = request.GET.get('email', '')
+        persona = Persona.objects.filter(email=email).first() if email else None
+        
+        form_persona = FormularioPersona(instance=persona)
+        form_estudiante = FormularioEstudiante()
+        
+        if persona:
+            for field in form_persona.fields.values():
+                field.widget.attrs['readonly'] = True
+                
+        return render(request, 'personas/form_estudiante.html', {
+            'form_persona': form_persona,
+            'form_estudiante': form_estudiante,
+            'persona': persona,
+            'email_busqueda': email
+        })
+
+    def post(self, request):
+        email = request.POST.get('email_busqueda')
+        persona = Persona.objects.filter(email=email).first() if email else None
+        
+        form_persona = FormularioPersona(request.POST, request.FILES, instance=persona)
+        form_estudiante = FormularioEstudiante(request.POST)
+        
+        if persona:
+            if form_estudiante.is_valid():
+                estudiante = form_estudiante.save(commit=False)
+                estudiante.persona = persona
+                estudiante.save()
+                return redirect('personas:lista_estudiantes')
+        else:
+            if form_persona.is_valid() and form_estudiante.is_valid():
+                persona_nueva = form_persona.save()
+                estudiante = form_estudiante.save(commit=False)
+                estudiante.persona = persona_nueva
+                estudiante.save()
+                return redirect('personas:lista_estudiantes')
+                
+        return render(request, 'personas/form_estudiante.html', {
+            'form_persona': form_persona,
+            'form_estudiante': form_estudiante,
+            'persona': persona,
+            'email_busqueda': email
+        })
+
+@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+class EditarEstudiante(View):
+    def get(self, request, pk):
+        estudiante = get_object_or_404(Estudiante, pk=pk)
+        form_persona = FormularioPersona(instance=estudiante.persona)
+        form_estudiante = FormularioEstudiante(instance=estudiante)
+        return render(request, 'personas/form_estudiante.html', {
+            'form_persona': form_persona,
+            'form_estudiante': form_estudiante,
+            'es_edicion': True
+        })
+
+    def post(self, request, pk):
+        estudiante = get_object_or_404(Estudiante, pk=pk)
+        form_persona = FormularioPersona(request.POST, request.FILES, instance=estudiante.persona)
+        form_estudiante = FormularioEstudiante(request.POST, instance=estudiante)
+        
+        if form_persona.is_valid() and form_estudiante.is_valid():
+            form_persona.save()
+            form_estudiante.save()
+            return redirect('personas:lista_estudiantes')
+            
+        return render(request, 'personas/form_estudiante.html', {
+            'form_persona': form_persona,
+            'form_estudiante': form_estudiante,
+            'es_edicion': True
+        })
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class DetalleEstudiante(DetailView):
+    model = Estudiante
+    template_name = 'personas/detalle_estudiante.html'
+    context_object_name = 'estudiante'

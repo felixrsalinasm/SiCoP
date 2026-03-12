@@ -1,0 +1,62 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Personas</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:crear_persona' %}" class="btn">Nueva persona</a>
+    {% endif %}
+</div>
+
+<form method="get" style="margin-bottom: 2rem;">
+    <input type="text" name="q" placeholder="Buscar por nombre, apellido o email" value="{{ request.GET.q|default:'' }}" style="padding: 0.5rem; width: 300px; border-radius: 4px; border: none;">
+    <button type="submit" class="btn">Buscar</button>
+</form>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead>
+        <tr style="background-color: #e94560;">
+            <th style="padding: 1rem; text-align: left;">Nombre completo</th>
+            <th style="padding: 1rem; text-align: left;">Email</th>
+            <th style="padding: 1rem; text-align: center;">¿Profesor?</th>
+            <th style="padding: 1rem; text-align: center;">¿Estudiante?</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for persona in personas %}
+        <tr style="border-bottom: 1px solid #1a1a2e;">
+            <td style="padding: 1rem;">{{ persona.nombre_completo }}</td>
+            <td style="padding: 1rem;">{{ persona.email }}</td>
+            <td style="padding: 1rem; text-align: center;">{% if hasattr persona 'profesor' %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{% if hasattr persona 'estudiante' %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'personas:detalle_persona' persona.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'personas:editar_persona' persona.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                {% endif %}
+                {% if user.es_admin %}
+                <a href="{% url 'personas:eliminar_persona' persona.pk %}" style="color: #ff0844; text-decoration: none;">Eliminar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="padding: 1rem; text-align: center;">No se encontraron personas.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?q={{ request.GET.q|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

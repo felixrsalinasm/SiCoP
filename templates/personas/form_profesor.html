@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<h1>{% if es_edicion %}Editar Profesor{% else %}Nuevo Profesor{% endif %}</h1>
+
+{% if not es_edicion and not persona and not email_busqueda %}
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+    <p>Para registrar un profesor, primero ingresa su correo electrónico para verificar si ya existe en la base de datos.</p>
+    <form method="get">
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <input type="email" name="email" required placeholder="correo@ejemplo.com" style="flex: 1; padding: 0.5rem; border-radius: 4px; border: none;">
+            <button type="submit" class="btn">Continuar</button>
+        </div>
+    </form>
+</div>
+{% else %}
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; max-width: 800px; margin: 0 auto;">
+    {% if persona and not es_edicion %}
+        <div style="background-color: #e94560; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+            La persona ya existe. Solo debes llenar los datos complementarios de Profesor.
+        </div>
+    {% elif not persona and not es_edicion %}
+        <div style="background-color: #4facfe; color: #1a1a2e; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+            La persona no existe. Por favor, llena todos los datos.
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="email_busqueda" value="{{ email_busqueda }}">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h3 style="border-bottom: 1px solid #e94560; padding-bottom: 0.5rem;">Datos Personales</h3>
+                
+                {{ form_persona.non_field_errors }}
+                {% for field in form_persona %}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div style="color: #ff0844; font-size: 0.8em; margin-top: 0.2rem;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div>
+                <h3 style="border-bottom: 1px solid #4facfe; padding-bottom: 0.5rem;">Datos de Profesor</h3>
+                
+                {{ form_profesor.non_field_errors }}
+                {% for field in form_profesor %}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div style="color: #ff0844; font-size: 0.8em; margin-top: 0.2rem;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'personas:lista_profesores' %}" class="btn" style="background-color: #1a1a2e;">Cancelar</a>
+            <button type="submit" class="btn">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

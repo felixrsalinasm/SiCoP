@@ -1,0 +1,91 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Estudiantes</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:crear_estudiante' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo estudiante</a>
+    {% endif %}
+</div>
+
+<form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Buscar</label>
+        <input type="text" name="q" placeholder="Matrícula o nombre" value="{{ request.GET.q|default:'' }}" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+    </div>
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Programa</label>
+        <select name="programa" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+            <option value="">Todos</option>
+            {% for prog in programas %}
+                <option value="{{ prog.id }}" {% if request.GET.programa == prog.id|stringformat:"s" %}selected{% endif %}>{{ prog.siglas }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Estado</label>
+        <select name="estado" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+            <option value="">Todos</option>
+            {% for v, l in estados %}
+                <option value="{{ v }}" {% if request.GET.estado == v %}selected{% endif %}>{{ l }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="btn" style="padding: 0.6rem 2rem;">Filtrar</button>
+    </div>
+</form>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Matrícula</th>
+            <th style="padding: 1rem; text-align: left;">Nombre completo</th>
+            <th style="padding: 1rem; text-align: center;">Programa</th>
+            <th style="padding: 1rem; text-align: center;">Generación</th>
+            <th style="padding: 1rem; text-align: center;">Modalidad</th>
+            <th style="padding: 1rem; text-align: center;">Estado</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for est in estudiantes %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ est.matricula }}</td>
+            <td style="padding: 1rem;">{{ est.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ est.programa.siglas }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ est.generacion }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ est.get_modalidad_display }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <span style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.85em;
+                    {% if est.estado == 'ACTIVO' %}background-color: #28a745;{% elif est.estado == 'GRADUADO' %}background-color: #007bff;{% else %}background-color: #dc3545;{% endif %}">
+                    {{ est.get_estado_display }}
+                </span>
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'personas:detalle_estudiante' est.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'personas:editar_estudiante' est.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="padding: 1rem; text-align: center;">No se encontraron estudiantes con esos filtros.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?q={{ request.GET.q|default:'' }}&programa={{ request.GET.programa|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?q={{ request.GET.q|default:'' }}&programa={{ request.GET.programa|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Detalle de Persona</h1>
+    <div>
+        {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:editar_persona' persona.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        {% if user.es_admin %}
+        <a href="{% url 'personas:eliminar_persona' persona.pk %}" class="btn" style="background-color: #ff0844; margin-left: 0.5rem;">Eliminar</a>
+        {% endif %}
+        <a href="{% url 'personas:lista_personas' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+    <h2>Datos Personales</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div><strong>Nombre completo:</strong> {{ persona.nombre_completo }}</div>
+        <div><strong>Email:</strong> {{ persona.email }}</div>
+        <div><strong>RFC:</strong> {{ persona.rfc|default:'N/A' }}</div>
+        <div><strong>CURP:</strong> {{ persona.curp|default:'N/A' }}</div>
+        <div><strong>CVU:</strong> {{ persona.cvu|default:'N/A' }}</div>
+        <div><strong>Teléfono:</strong> {{ persona.telefono|default:'N/A' }}</div>
+        <div><strong>Género:</strong> {{ persona.get_genero_display|default:'N/A' }}</div>
+        <div><strong>Fecha de nacimiento:</strong> {{ persona.fecha_nacimiento|default:'N/A' }}</div>
+    </div>
+</div>
+
+{% if hasattr persona 'profesor' %}
+<div style="background-color: #e94560; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+    <h2>Datos como Profesor</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div><strong>Grado:</strong> {{ persona.profesor.get_grado_academico_display }}</div>
+        <div><strong>Laboratorio:</strong> {{ persona.profesor.laboratorio|default:'Ninguno' }}</div>
+        <div><strong>Activo:</strong> {% if persona.profesor.activo %}Sí{% else %}No{% endif %}</div>
+        <div><strong>Alumnos activos:</strong> {{ persona.profesor.total_alumnos_activos }}</div>
+        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+            <a href="{% url 'personas:detalle_profesor' persona.profesor.pk %}" class="btn" style="background-color: #1a1a2e; color: #ffffff;">Ver ficha completa de profesor</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if hasattr persona 'estudiante' %}
+<div style="background-color: #4facfe; color: #1a1a2e; padding: 2rem; border-radius: 8px;">
+    <h2>Datos como Estudiante</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div><strong>Matrícula:</strong> {{ persona.estudiante.matricula }}</div>
+        <div><strong>Programa:</strong> {{ persona.estudiante.programa.siglas }}</div>
+        <div><strong>Estado:</strong> {{ persona.estudiante.get_estado_display }}</div>
+        <div><strong>Generación:</strong> {{ persona.estudiante.generacion }}</div>
+        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+            <a href="{% url 'personas:detalle_estudiante' persona.estudiante.pk %}" class="btn" style="background-color: #1a1a2e; color: #ffffff;">Ver ficha completa de estudiante</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
