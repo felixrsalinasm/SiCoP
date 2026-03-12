@@ -1,0 +1,48 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Laboratorios</h1>
+    {% if user.es_admin %}
+        <a href="{% url 'programas:crear_laboratorio' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo laboratorio</a>
+    {% endif %}
+</div>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Siglas</th>
+            <th style="padding: 1rem; text-align: left;">Nombre</th>
+            <th style="padding: 1rem; text-align: left;">Jefe de Laboratorio</th>
+            <th style="padding: 1rem; text-align: center;">Profesores asignados</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lab in laboratorios %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;"><strong>{{ lab.siglas }}</strong></td>
+            <td style="padding: 1rem;">{{ lab.nombre }}</td>
+            <td style="padding: 1rem;">
+                {% if lab.jefe %}
+                    {{ lab.jefe.get_grado_academico_display }} {{ lab.jefe.persona.nombre_completo }}
+                {% else %}
+                    <span style="color: #cccccc; font-style: italic;">Sin asignar</span>
+                {% endif %}
+            </td>
+            <td style="padding: 1rem; text-align: center;">{{ lab.profesores_asignados.count }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'programas:detalle_laboratorio' lab.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin %}
+                <a href="{% url 'programas:editar_laboratorio' lab.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="padding: 1rem; text-align: center;">No hay laboratorios registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

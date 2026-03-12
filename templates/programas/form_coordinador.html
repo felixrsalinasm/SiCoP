@@ -1,0 +1,46 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<h1>{% if form.instance.pk %}Editar Asignación de Coordinador{% else %}Asignar Coordinador{% endif %}</h1>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+    
+    {% if not form.instance.pk %}
+    <div style="background-color: #e94560; color: #ffffff; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+        <strong>Advertencia:</strong> Al asignar este nuevo coordinador, el coordinador actual de ese programa será cerrado automáticamente (se le asignará la fecha de hoy como fin de periodo).
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color: #cccccc; display: block; margin-top: 0.25rem;">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div style="color: #e94560; font-size: 0.9em; margin-top: 0.25rem;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            {% if form.instance.pk %}
+            <div>
+                <label for="id_fecha_fin" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Fecha fin (Opcional, dejar en blanco si es el actual)</label>
+                <input type="date" name="fecha_fin" value="{{ form.instance.fecha_fin|date:'Y-m-d'|default:'' }}" id="id_fecha_fin">
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'programas:lista_coordinadores' %}" class="btn" style="background-color: #1a1a2e;">Cancelar</a>
+            <button type="submit" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Guardar Asignación</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

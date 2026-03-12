@@ -1,0 +1,104 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Ficha de Programa</h1>
+    <div>
+        {% if user.es_admin %}
+        <a href="{% url 'programas:editar_programa' programa.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        <a href="{% url 'programas:lista_programas' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div style="grid-column: 1 / -1;"><strong>Nombre:</strong> {{ programa.nombre }}</div>
+    <div><strong>Siglas:</strong> {{ programa.siglas }}</div>
+    <div><strong>Nivel:</strong> {{ programa.get_nivel_display }}</div>
+    <div><strong>Fecha de Creación:</strong> {{ programa.fecha_creacion }}</div>
+    <div><strong>Activo:</strong> {% if programa.activo %}Sí{% else %}No{% endif %}</div>
+    <div style="grid-column: 1 / -1;"><strong>URL Doc Base:</strong> 
+        {% if programa.url_doc_base %}
+            <a href="{{ programa.url_doc_base }}" target="_blank" style="color: #4facfe;">{{ programa.url_doc_base }}</a>
+        {% else %}
+            N/A
+        {% endif %}
+    </div>
+    <div style="grid-column: 1 / -1; background-color: #1a1a2e; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border-left: 5px solid #e94560;">
+        <h3 style="margin-top: 0;">Coordinador Actual</h3>
+        {% with current=programa.historial_coordinadores.first %}
+            {% if current and current.es_actual %}
+                <p style="font-size: 1.1em; margin-bottom: 0;"><strong>{{ current.profesor.get_grado_academico_display }} {{ current.profesor.persona.nombre_completo }}</strong></p>
+                <p style="margin-top: 0.5rem; color: #cccccc; font-size: 0.9em;">En el cargo desde: {{ current.fecha_inicio }}</p>
+            {% else %}
+                <p style="color: #e94560; font-style: italic;">Sin coordinador actual designado.</p>
+            {% endif %}
+        {% endwith %}
+        {% if user.es_admin %}
+        <div style="margin-top: 1rem;">
+            <a href="{% url 'programas:asignar_coordinador' %}" class="btn" style="background-color: #e94560; font-size: 0.9em;">Asignar Nuevo Coordinador</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<h2>Historial de Coordinadores</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+    <thead style="background-color: #4facfe; color: #1a1a2e;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Profesor</th>
+            <th style="padding: 1rem; text-align: left;">Periodo</th>
+            <th style="padding: 1rem; text-align: center;">¿Actual?</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for coord in programa.historial_coordinadores.all %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ coord.profesor.get_grado_academico_display }} {{ coord.profesor.persona.nombre_completo }}</td>
+            <td style="padding: 1rem;">{{ coord.fecha_inicio }} &mdash; {{ coord.fecha_fin|default:"Presente" }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                {% if coord.es_actual %}
+                    <span style="color: #28a745; font-weight: bold;">Sí</span>
+                {% else %}
+                    No
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" style="padding: 1rem; text-align: center;">No hay registros de coordinadores.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Estudiantes Activos</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #e94560;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Matrícula</th>
+            <th style="padding: 1rem; text-align: left;">Nombre completo</th>
+            <th style="padding: 1rem; text-align: center;">Generación</th>
+            <th style="padding: 1rem; text-align: center;">Ver</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for est in programa.estudiantes.all %}
+            {% if est.estado == 'ACTIVO' %}
+            <tr style="border-bottom: 1px solid #0f3460;">
+                <td style="padding: 1rem;">{{ est.matricula }}</td>
+                <td style="padding: 1rem;">{{ est.persona.nombre_completo }}</td>
+                <td style="padding: 1rem; text-align: center;">{{ est.generacion }}</td>
+                <td style="padding: 1rem; text-align: center;">
+                    <a href="{% url 'personas:detalle_estudiante' est.pk %}" style="color: #4facfe;">Ficha</a>
+                </td>
+            </tr>
+            {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="4" style="padding: 1rem; text-align: center;">Sin alumnos activos.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

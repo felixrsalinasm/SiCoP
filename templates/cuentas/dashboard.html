@@ -16,8 +16,10 @@
 
     {% if user.es_admin or user.es_coordinador %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
-        <h3>Programas</h3>
+        <h3><a href="{% url 'programas:lista_programas' %}" style="color: #ffffff; text-decoration: none;">Programas</a></h3>
         <p>Gestión de programas y coordinadores.</p>
+        <p><a href="{% url 'programas:lista_laboratorios' %}" style="color: #e94560; text-decoration: none;">Ver Laboratorios</a> | 
+           <a href="{% url 'programas:lista_coordinadores' %}" style="color: #4facfe; text-decoration: none;">Ver Coordinadores</a></p>
     </div>
     {% endif %}
 

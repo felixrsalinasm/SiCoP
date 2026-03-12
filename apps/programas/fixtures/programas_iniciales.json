@@ -1,0 +1,204 @@
+[
+  {
+    "model": "programas.programa",
+    "pk": 1,
+    "fields": {
+      "nombre": "Maestría en Ciencias de la Computación",
+      "siglas": "MCC",
+      "nivel": "MAESTRIA",
+      "url_doc_base": "",
+      "fecha_creacion": "1996-01-01",
+      "activo": true,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.programa",
+    "pk": 2,
+    "fields": {
+      "nombre": "Maestría en Ciencias en Ingeniería de Cómputo",
+      "siglas": "MCIC",
+      "nivel": "MAESTRIA",
+      "url_doc_base": "",
+      "fecha_creacion": "1997-01-01",
+      "activo": true,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.programa",
+    "pk": 3,
+    "fields": {
+      "nombre": "Maestría en Ciencia y Tecnología de IA y Ciencia de Datos",
+      "siglas": "MCyTIAyCD",
+      "nivel": "MAESTRIA",
+      "url_doc_base": "",
+      "fecha_creacion": "2023-01-01",
+      "activo": true,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.programa",
+    "pk": 4,
+    "fields": {
+      "nombre": "Doctorado en Ciencias de la Computación",
+      "siglas": "DCC",
+      "nivel": "DOCTORADO",
+      "url_doc_base": "",
+      "fecha_creacion": "1996-01-01",
+      "activo": true,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.programa",
+    "pk": 5,
+    "fields": {
+      "nombre": "Doctorado en Ciencia y Tecnología de IA y Ciencia de Datos",
+      "siglas": "DCyTIAyCD",
+      "nivel": "DOCTORADO",
+      "url_doc_base": "",
+      "fecha_creacion": "2023-01-01",
+      "activo": true,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 1,
+    "fields": {
+      "nombre": "Laboratorio de Inteligencia Artificial",
+      "siglas": "LIA",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 2,
+    "fields": {
+      "nombre": "Laboratorio de Lenguaje Natural",
+      "siglas": "LLN",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 3,
+    "fields": {
+      "nombre": "Laboratorio de Cómputo Inteligente",
+      "siglas": "LCI",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 4,
+    "fields": {
+      "nombre": "Laboratorio de Ciberseguridad",
+      "siglas": "LCSEG",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 5,
+    "fields": {
+      "nombre": "Laboratorio de Redes y Seguridad",
+      "siglas": "LRS",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 6,
+    "fields": {
+      "nombre": "Laboratorio de Robótica y Mecatrónica",
+      "siglas": "LRM",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 7,
+    "fields": {
+      "nombre": "Laboratorio de Sistemas Embebidos",
+      "siglas": "LSE",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 8,
+    "fields": {
+      "nombre": "Laboratorio de Procesamiento Digital de Señales",
+      "siglas": "LPDS",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 9,
+    "fields": {
+      "nombre": "Laboratorio de Simulación y Modelado",
+      "siglas": "LSM",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 10,
+    "fields": {
+      "nombre": "Laboratorio de Ciencias Cognitivas Computacionales",
+      "siglas": "LCCC",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 11,
+    "fields": {
+      "nombre": "Laboratorio de Ciencias de la Información Cuántica",
+      "siglas": "LCIQ",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "programas.laboratorio",
+    "pk": 12,
+    "fields": {
+      "nombre": "Laboratorio de Ciencia de Datos",
+      "siglas": "LCD",
+      "jefe": null,
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  }
+]

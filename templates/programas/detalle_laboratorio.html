@@ -1,0 +1,52 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Ficha de Laboratorio</h1>
+    <div>
+        {% if user.es_admin %}
+        <a href="{% url 'programas:editar_laboratorio' laboratorio.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        <a href="{% url 'programas:lista_laboratorios' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div><strong>Nombre:</strong> {{ laboratorio.nombre }}</div>
+    <div><strong>Siglas:</strong> {{ laboratorio.siglas }}</div>
+    <div style="grid-column: 1 / -1;">
+        <strong>Jefe de Laboratorio:</strong> 
+        {% if laboratorio.jefe %}
+            {{ laboratorio.jefe.get_grado_academico_display }} {{ laboratorio.jefe.persona.nombre_completo }}
+        {% else %}
+            Sin asignar
+        {% endif %}
+    </div>
+</div>
+
+<h2>Profesores Asignados</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #e94560;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Grado</th>
+            <th style="padding: 1rem; text-align: left;">Nombre completo</th>
+            <th style="padding: 1rem; text-align: center;">¿Externo?</th>
+            <th style="padding: 1rem; text-align: center;">¿Activo?</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for prof in laboratorio.profesores_asignados.all %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ prof.get_grado_academico_display }}</td>
+            <td style="padding: 1rem;">{{ prof.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{% if prof.es_externo %}Sí{% else %}No{% endif %}</td>
+            <td style="padding: 1rem; text-align: center;">{% if prof.activo %}Sí{% else %}No{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" style="padding: 1rem; text-align: center;">Este laboratorio no cuenta con profesores asignados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
