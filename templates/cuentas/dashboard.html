@@ -31,10 +31,12 @@
     </div>
     {% endif %}
 
-    {% if user.es_admin or user.es_coordinador %}
+    {% if user.es_admin or user.es_coordinador or user.es_secretaria %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
-        <h3>Tesis</h3>
-        <p>Gestión de directores, comités y jurados.</p>
+        <h3><a href="{% url 'tesis:lista_directores' %}" style="color: #ffffff; text-decoration: none;">Tesis</a></h3>
+        <p>Directores, Comités y Jurados de Examen.</p>
+        <p><a href="{% url 'tesis:lista_comite' %}" style="color: #4facfe; text-decoration: none;">Comités Tutoriales</a> | 
+           <a href="{% url 'tesis:lista_jurado' %}" style="color: #f6d365; text-decoration: none;">Jurados de Examen</a></p>
     </div>
     {% endif %}
 </div>

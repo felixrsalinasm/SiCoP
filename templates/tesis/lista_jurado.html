@@ -1,0 +1,91 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Jurados de Examen</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'tesis:asignar_jurado' %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Asignar al jurado</a>
+    {% endif %}
+</div>
+
+<form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Tipo Examen</label>
+        <select name="tipo_examen" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="">Todos</option>
+            <option value="GRADO" {% if request.GET.tipo_examen == 'GRADO' %}selected{% endif %}>Grado</option>
+            <option value="PREDOCTORAL" {% if request.GET.tipo_examen == 'PREDOCTORAL' %}selected{% endif %}>Predoctoral</option>
+        </select>
+    </div>
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Resultado</label>
+        <select name="resultado" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="">Todos</option>
+            <option value="PENDIENTE" {% if request.GET.resultado == 'PENDIENTE' %}selected{% endif %}>Pendientes</option>
+            <option value="APROBADO" {% if request.GET.resultado == 'APROBADO' %}selected{% endif %}>Aprobados</option>
+            <option value="NO_APROBADO" {% if request.GET.resultado == 'NO_APROBADO' %}selected{% endif %}>No Aprobados</option>
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="btn" style="padding: 0.6rem 2rem;">Filtrar</button>
+    </div>
+</form>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Estudiante</th>
+            <th style="padding: 1rem; text-align: center;">Tipo Examen</th>
+            <th style="padding: 1rem; text-align: left;">Profesor</th>
+            <th style="padding: 1rem; text-align: center;">Rol</th>
+            <th style="padding: 1rem; text-align: left;">Fecha examen</th>
+            <th style="padding: 1rem; text-align: center;">Resultado</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for obj in jurados %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ obj.estudiante.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ obj.get_tipo_examen_display }}</td>
+            <td style="padding: 1rem;">{{ obj.profesor.get_grado_academico_display }} {{ obj.profesor.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ obj.get_rol_display }}</td>
+            <td style="padding: 1rem;">{{ obj.fecha_examen|default:"Por definir" }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                {% if obj.resultado == 'APROBADO' %}
+                    <span style="color: #28a745; font-weight: bold;">{{ obj.get_resultado_display }}</span>
+                {% elif obj.resultado == 'NO_APROBADO' %}
+                    <span style="color: #dc3545; font-weight: bold;">{{ obj.get_resultado_display }}</span>
+                {% else %}
+                    <span style="color: #f6d365;">{{ obj.get_resultado_display }}</span>
+                {% endif %}
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'tesis:editar_jurado' obj.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                {% endif %}
+                {% if user.es_admin or user.es_coordinador %}
+                <a href="{% url 'tesis:resultado_jurado' obj.pk %}" style="color: #4facfe; text-decoration: none;">Dictaminar grupo</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="padding: 1rem; text-align: center;">No se encontraron registros.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?tipo_examen={{ request.GET.tipo_examen|default:'' }}&resultado={{ request.GET.resultado|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?tipo_examen={{ request.GET.tipo_examen|default:'' }}&resultado={{ request.GET.resultado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -9,6 +9,7 @@ urlpatterns = [
     path('personas/', include('apps.personas.urls')),
     path('', include('apps.programas.urls')),
     path('nombramientos/', include('apps.nombramientos.urls')),
+    path('tesis/', include('apps.tesis.urls')),
 ]
 
 if settings.DEBUG:
