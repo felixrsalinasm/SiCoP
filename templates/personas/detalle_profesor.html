@@ -1,0 +1,80 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Ficha de Profesor</h1>
+    <div>
+        {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:editar_profesor' profesor.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        <a href="{% url 'personas:lista_profesores' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div><strong>Nombre completo:</strong> {{ profesor.persona.nombre_completo }}</div>
+    <div><strong>Grado Académico:</strong> {{ profesor.get_grado_academico_display }}</div>
+    <div><strong>Laboratorio:</strong> {{ profesor.laboratorio|default:'N/A' }}</div>
+    <div><strong>Email:</strong> {{ profesor.persona.email }}</div>
+    <div><strong>Fecha Ingreso IPN:</strong> {{ profesor.fecha_ingreso_ipn|default:'N/A' }}</div>
+    <div><strong>Fecha Ingreso CIC:</strong> {{ profesor.fecha_ingreso_cic|default:'N/A' }}</div>
+    <div><strong>Externo:</strong> {% if profesor.es_externo %}Sí{% else %}No{% endif %}</div>
+    <div><strong>Activo:</strong> {% if profesor.activo %}Sí{% else %}No{% endif %}</div>
+</div>
+
+<h2>Nombramientos Vigentes</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+    <thead style="background-color: #4facfe; color: #1a1a2e;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Tipo</th>
+            <th style="padding: 1rem; text-align: left;">Clave</th>
+            <th style="padding: 1rem; text-align: left;">Emisión</th>
+            <th style="padding: 1rem; text-align: left;">Vencimiento</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for np in profesor.nombramientos_profesor.all %}
+            {% if np.nombramiento.esta_vigente %}
+            <tr style="border-bottom: 1px solid #0f3460;">
+                <td style="padding: 1rem;">{{ np.nombramiento.tipo.nombramiento }}</td>
+                <td style="padding: 1rem;">{{ np.nombramiento.clave }}</td>
+                <td style="padding: 1rem;">{{ np.nombramiento.fecha_emision }}</td>
+                <td style="padding: 1rem;">{{ np.nombramiento.fecha_vencimiento }}</td>
+            </tr>
+            {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="4" style="padding: 1rem; text-align: center;">Sin nombramientos vigentes.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Alumnos Dirigidos Activos</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+    <thead style="background-color: #e94560;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Matrícula</th>
+            <th style="padding: 1rem; text-align: left;">Nombre</th>
+            <th style="padding: 1rem; text-align: left;">Programa</th>
+            <th style="padding: 1rem; text-align: center;">Rol</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dt in profesor.direcciones_tesis.all %}
+            {% if dt.activo and dt.estudiante.estado == 'ACTIVO' %}
+            <tr style="border-bottom: 1px solid #0f3460;">
+                <td style="padding: 1rem;">{{ dt.estudiante.matricula }}</td>
+                <td style="padding: 1rem;">{{ dt.estudiante.persona.nombre_completo }}</td>
+                <td style="padding: 1rem;">{{ dt.estudiante.programa.siglas }}</td>
+                <td style="padding: 1rem; text-align: center;">{% if dt.es_codirector %}Codirector{% else %}Director{% endif %}</td>
+            </tr>
+            {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="4" style="padding: 1rem; text-align: center;">Sin alumnos activos.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

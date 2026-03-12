@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Ficha de Estudiante</h1>
+    <div>
+        {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'personas:editar_estudiante' estudiante.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
+        {% endif %}
+        <a href="{% url 'personas:lista_estudiantes' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div><strong>Nombre completo:</strong> {{ estudiante.persona.nombre_completo }}</div>
+    <div><strong>Matrícula:</strong> {{ estudiante.matricula }}</div>
+    <div><strong>Programa:</strong> {{ estudiante.programa.nombre }}</div>
+    <div><strong>Generación:</strong> {{ estudiante.generacion }}</div>
+    <div><strong>Modalidad:</strong> {{ estudiante.get_modalidad_display }}</div>
+    <div><strong>Estado:</strong> 
+        <span style="padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: bold;
+            {% if estudiante.estado == 'ACTIVO' %}color: #28a745;{% elif estudiante.estado == 'GRADUADO' %}color: #4facfe;{% else %}color: #e94560;{% endif %}">
+            {{ estudiante.get_estado_display }}
+        </span>
+    </div>
+    <div><strong>Fecha de Ingreso:</strong> {{ estudiante.fecha_ingreso }}</div>
+    <div><strong>Fecha de Egreso:</strong> {{ estudiante.fecha_egreso|default:'N/A' }}</div>
+    <div><strong>Email:</strong> {{ estudiante.persona.email }}</div>
+</div>
+
+<h2>Directores de Tesis (Activos)</h2>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+    <thead style="background-color: #e94560;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Rol</th>
+            <th style="padding: 1rem; text-align: left;">Nombre del Profesor</th>
+            <th style="padding: 1rem; text-align: left;">Fecha de Asignación</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dt in estudiante.direcciones_recibidas.all %}
+            {% if dt.activo %}
+            <tr style="border-bottom: 1px solid #0f3460;">
+                <td style="padding: 1rem;">{% if dt.es_codirector %}Codirector{% else %}Director{% endif %}</td>
+                <td style="padding: 1rem;">{{ dt.profesor.persona.nombre_completo }}</td>
+                <td style="padding: 1rem;">{{ dt.fecha_asignacion }}</td>
+            </tr>
+            {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="3" style="padding: 1rem; text-align: center;">Sin directores asignados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
