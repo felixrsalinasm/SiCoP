@@ -4,6 +4,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
+admin.site.site_header = settings.ADMIN_SITE_HEADER
+admin.site.site_title = settings.ADMIN_SITE_TITLE
+admin.site.index_title = settings.ADMIN_INDEX_TITLE
+
 urlpatterns = [
     path('', RedirectView.as_view(url='/dashboard/', permanent=False), name='root'),
     path('admin/', admin.site.urls),
@@ -12,6 +16,7 @@ urlpatterns = [
     path('', include('apps.programas.urls')),
     path('nombramientos/', include('apps.nombramientos.urls')),
     path('tesis/', include('apps.tesis.urls')),
+    path('historial/', include('apps.historial.urls')),
 ]
 
 if settings.DEBUG:

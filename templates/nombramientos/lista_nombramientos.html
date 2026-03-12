@@ -3,9 +3,14 @@
 {% block contenido %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Lista de Nombramientos</h1>
-    {% if user.es_admin or user.es_secretaria %}
-        <a href="{% url 'nombramientos:crear_nombramiento' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo nombramiento</a>
-    {% endif %}
+    <div>
+        {% if user.es_admin or user.es_coordinador %}
+            <a href="{% url 'nombramientos:exportar_nombramientos_csv' %}" class="btn" style="background-color: #2e7d32; margin-right: 0.5rem;">Exportar CSV</a>
+        {% endif %}
+        {% if user.es_admin or user.es_secretaria %}
+            <a href="{% url 'nombramientos:crear_nombramiento' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo nombramiento</a>
+        {% endif %}
+    </div>
 </div>
 
 <form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
@@ -76,15 +81,23 @@
     </tbody>
 </table>
 
+
 {% if is_paginated %}
-<div style="margin-top: 2rem; text-align: center;">
+<div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
     {% if page_obj.has_previous %}
-        <a href="?origen={{ request.GET.origen|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Anterior</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Anterior</span>
     {% endif %}
-    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+    <span style="font-weight: bold;">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+
     {% if page_obj.has_next %}
-        <a href="?origen={{ request.GET.origen|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Siguiente</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Siguiente</span>
     {% endif %}
 </div>
 {% endif %}
+
 {% endblock %}

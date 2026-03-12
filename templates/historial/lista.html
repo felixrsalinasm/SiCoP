@@ -2,36 +2,38 @@
 
 {% block contenido %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <h1>Lista de Tipos de Nombramiento</h1>
-    {% if user.es_admin %}
-        <a href="{% url 'nombramientos:crear_tipo' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo tipo</a>
-    {% endif %}
+    <h1>Historial de Cambios</h1>
 </div>
 
 <table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
     <thead style="background-color: #0f3460;">
         <tr>
-            <th style="padding: 1rem; text-align: left;">Nombre</th>
-            <th style="padding: 1rem; text-align: left;">Origen</th>
+            <th style="padding: 1rem; text-align: left;">Fecha</th>
+            <th style="padding: 1rem; text-align: left;">Usuario</th>
+            <th style="padding: 1rem; text-align: center;">Acción</th>
+            <th style="padding: 1rem; text-align: left;">Módulo</th>
             <th style="padding: 1rem; text-align: left;">Descripción</th>
-            <th style="padding: 1rem; text-align: center;">Acciones</th>
+            <th style="padding: 1rem; text-align: center;">IP</th>
         </tr>
     </thead>
     <tbody>
-        {% for tipo in tipos %}
+        {% for reg in registros %}
         <tr style="border-bottom: 1px solid #0f3460;">
-            <td style="padding: 1rem;"><strong>{{ tipo.nombramiento }}</strong></td>
-            <td style="padding: 1rem;">{{ tipo.get_origen_display }}</td>
-            <td style="padding: 1rem;">{{ tipo.descripcion }}</td>
+            <td style="padding: 1rem;">{{ reg.fecha|date:"Y-m-d H:i:s" }}</td>
+            <td style="padding: 1rem;">{{ reg.usuario|default:"Sistema" }}</td>
             <td style="padding: 1rem; text-align: center;">
-                {% if user.es_admin %}
-                <a href="{% url 'nombramientos:editar_tipo' tipo.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
-                {% endif %}
+                <span style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.85em; font-weight: bold;
+                    {% if reg.accion == 'CREAR' %}background-color: #28a745;{% elif reg.accion == 'EDITAR' %}background-color: #ffc107; color: #1a1a2e;{% else %}background-color: #dc3545;{% endif %}">
+                    {{ reg.accion }}
+                </span>
             </td>
+            <td style="padding: 1rem;">{{ reg.modulo }}</td>
+            <td style="padding: 1rem;">{{ reg.descripcion }}</td>
+            <td style="padding: 1rem; text-align: center; color: #a0a0b0;">{{ reg.ip|default:"-" }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4" style="padding: 1rem; text-align: center;">No hay tipos de nombramiento registrados.</td>
+            <td colspan="6" style="padding: 1rem; text-align: center;">No hay registros en el historial.</td>
         </tr>
         {% endfor %}
     </tbody>

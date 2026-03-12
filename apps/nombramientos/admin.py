@@ -4,19 +4,16 @@ from .models import CatTipoNombramiento, Nombramiento, NombramientoProfesor, Pro
 @admin.register(CatTipoNombramiento)
 class CatTipoNombramientoAdmin(admin.ModelAdmin):
     list_display = ('nombramiento', 'origen')
-    list_filter = ('origen',)
+    search_fields = ('nombramiento', 'origen')
 
 @admin.register(Nombramiento)
 class NombramientoAdmin(admin.ModelAdmin):
-    list_display = ('clave', 'tipo', 'fecha_emision', 'fecha_vencimiento', 'esta_vigente')
-    list_filter = ('tipo__origen',)
-    search_fields = ('clave',)
+    list_display = ('obtener_profesor', 'tipo', 'clave', 'fecha_emision', 'fecha_vencimiento')
+    list_filter = ('tipo',)
+    search_fields = ('profesores_nombramiento__profesor__persona__nombres', 'clave')
+    readonly_fields = ('fecha_emision',)
 
-@admin.register(NombramientoProfesor)
-class NombramientoProfesorAdmin(admin.ModelAdmin):
-    list_display = ('profesor', 'nombramiento')
-    search_fields = ('profesor__persona__paterno',)
-
-@admin.register(ProgramaNombramiento)
-class ProgramaNombramientoAdmin(admin.ModelAdmin):
-    list_display = ('programa', 'nombramiento')
+    @admin.display(description='Profesor')
+    def obtener_profesor(self, obj):
+        rel = obj.profesores_nombramiento.first()
+        return rel.profesor if rel else '-'

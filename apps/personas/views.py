@@ -1,5 +1,8 @@
+from apps.historial.utils import registrar_accion
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.http import HttpResponse
+import csv
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.db.models import Q
@@ -15,7 +18,7 @@ class ListaPersonas(ListView):
     model = Persona
     template_name = 'personas/lista_personas.html'
     context_object_name = 'personas'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -41,6 +44,12 @@ class CrearPersona(CreateView):
     template_name = 'personas/form_persona.html'
     success_url = reverse_lazy('personas:lista_personas')
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'CREAR', 'Persona', f'Crear registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class EditarPersona(UpdateView):
     model = Persona
@@ -48,18 +57,30 @@ class EditarPersona(UpdateView):
     template_name = 'personas/form_persona.html'
     success_url = reverse_lazy('personas:lista_personas')
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'Persona', f'Editar registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido('ADMIN'), name='dispatch')
 class EliminarPersona(DeleteView):
     model = Persona
     template_name = 'personas/confirmar_eliminar.html'
     success_url = reverse_lazy('personas:lista_personas')
 
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        registrar_accion(self.request, 'ELIMINAR', 'Persona', f'Eliminar registro: {obj}')
+        return super().delete(request, *args, **kwargs)
+
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaProfesores(ListView):
     model = Profesor
     template_name = 'personas/lista_profesores.html'
     context_object_name = 'profesores'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -158,7 +179,7 @@ class ListaEstudiantes(ListView):
     model = Estudiante
     template_name = 'personas/lista_estudiantes.html'
     context_object_name = 'estudiantes'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -266,3 +287,41 @@ class DetalleEstudiante(DetailView):
     model = Estudiante
     template_name = 'personas/detalle_estudiante.html'
     context_object_name = 'estudiante'
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class VistaExportarProfesoresCSV(View):
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="profesores_CIC.csv"'
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['Nombre Completo', 'Grado', 'Laboratorio', 'Correo', 'Activo'])
+        for prof in Profesor.objects.select_related('persona', 'laboratorio').all():
+            writer.writerow([
+                prof.persona.nombre_completo(),
+                prof.get_grado_academico_display(),
+                prof.laboratorio.nombre if prof.laboratorio else '-',
+                prof.persona.email,
+                'Sí' if prof.activo else 'No'
+            ])
+        return response
+
+@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+class VistaExportarEstudiantesCSV(View):
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="estudiantes_CIC.csv"'
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['Nombre Completo', 'Matricula', 'Programa', 'Generacion', 'Modalidad', 'Estado', 'Correo'])
+        for est in Estudiante.objects.select_related('persona', 'programa').all():
+            writer.writerow([
+                est.persona.nombre_completo(),
+                est.matricula,
+                est.programa.siglas,
+                est.generacion,
+                est.get_modalidad_display(),
+                est.get_estado_display(),
+                est.persona.email
+            ])
+        return response

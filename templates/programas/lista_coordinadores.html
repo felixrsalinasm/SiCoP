@@ -50,4 +50,23 @@
 {% empty %}
     <p>No hay registros de coordinadores en ningún programa.</p>
 {% endfor %}
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Anterior</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Anterior</span>
+    {% endif %}
+
+    <span style="font-weight: bold;">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Siguiente</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Siguiente</span>
+    {% endif %}
+</div>
+{% endif %}
+
 {% endblock %}
