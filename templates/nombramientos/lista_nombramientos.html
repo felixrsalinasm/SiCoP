@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Nombramientos</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'nombramientos:crear_nombramiento' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo nombramiento</a>
+    {% endif %}
+</div>
+
+<form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Origen</label>
+        <select name="origen" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="">Todos</option>
+            <option value="IPN" {% if request.GET.origen == 'IPN' %}selected{% endif %}>IPN</option>
+            <option value="CONAHCYT" {% if request.GET.origen == 'CONAHCYT' %}selected{% endif %}>CONAHCYT</option>
+            <option value="EXTERNO" {% if request.GET.origen == 'EXTERNO' %}selected{% endif %}>EXTERNO</option>
+        </select>
+    </div>
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Estado</label>
+        <select name="estado" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="">Todos</option>
+            <option value="vigente" {% if request.GET.estado == 'vigente' %}selected{% endif %}>Vigentes</option>
+            <option value="vencido" {% if request.GET.estado == 'vencido' %}selected{% endif %}>Vencidos</option>
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="btn" style="padding: 0.6rem 2rem;">Filtrar</button>
+    </div>
+</form>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Clave</th>
+            <th style="padding: 1rem; text-align: left;">Tipo</th>
+            <th style="padding: 1rem; text-align: center;">Origen</th>
+            <th style="padding: 1rem; text-align: left;">Fecha emisión</th>
+            <th style="padding: 1rem; text-align: left;">Fecha venc.</th>
+            <th style="padding: 1rem; text-align: center;">Vigente</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for nomb in nombramientos %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ nomb.clave }}</td>
+            <td style="padding: 1rem;">{{ nomb.tipo.nombramiento }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ nomb.tipo.get_origen_display }}</td>
+            <td style="padding: 1rem;">{{ nomb.fecha_emision }}</td>
+            <td style="padding: 1rem;">{{ nomb.fecha_vencimiento }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                {% if nomb.esta_vigente %}
+                    <span style="color: #28a745; font-weight: bold;">✓ Sí</span>
+                {% else %}
+                    <span style="color: #dc3545; font-weight: bold;">✗ No</span>
+                {% endif %}
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'nombramientos:detalle_nombramiento' nomb.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'nombramientos:editar_nombramiento' nomb.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                {% endif %}
+                {% if user.es_admin %}
+                <a href="{% url 'nombramientos:eliminar_nombramiento' nomb.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="padding: 1rem; text-align: center;">No se encontraron nombramientos con esos filtros.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; text-align: center;">
+    {% if page_obj.has_previous %}
+        <a href="?origen={{ request.GET.origen|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.previous_page_number }}" style="color: #ffffff; text-decoration: none; margin-right: 1rem;">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?origen={{ request.GET.origen|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,112 @@
+[
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 1,
+    "fields": {
+      "nombramiento": "COFAA",
+      "origen": "IPN",
+      "descripcion": "Comisión de Operación y Fomento de Actividades Académicas",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 2,
+    "fields": {
+      "nombramiento": "EDI",
+      "origen": "IPN",
+      "descripcion": "Estímulo al Desempeño de los Investigadores",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 3,
+    "fields": {
+      "nombramiento": "SIP",
+      "origen": "IPN",
+      "descripcion": "Secretaría de Investigación y Posgrado",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 4,
+    "fields": {
+      "nombramiento": "Beca IPN",
+      "origen": "IPN",
+      "descripcion": "Beca Institucional del IPN",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 5,
+    "fields": {
+      "nombramiento": "Candidato a Investigador Nacional",
+      "origen": "CONAHCYT",
+      "descripcion": "Candidato al Sistema Nacional de Investigadores",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 6,
+    "fields": {
+      "nombramiento": "Investigador Nacional Nivel 1",
+      "origen": "CONAHCYT",
+      "descripcion": "SNI Nivel 1",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 7,
+    "fields": {
+      "nombramiento": "Investigador Nacional Nivel 2",
+      "origen": "CONAHCYT",
+      "descripcion": "SNI Nivel 2",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 8,
+    "fields": {
+      "nombramiento": "Investigador Nacional Nivel 3",
+      "origen": "CONAHCYT",
+      "descripcion": "SNI Nivel 3",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 9,
+    "fields": {
+      "nombramiento": "Investigador Nacional Emérito",
+      "origen": "CONAHCYT",
+      "descripcion": "SNI Emérito",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "nombramientos.cattiponombramiento",
+    "pk": 10,
+    "fields": {
+      "nombramiento": "Distinción o reconocimiento externo",
+      "origen": "EXTERNO",
+      "descripcion": "Reconocimientos de otras instituciones",
+      "creado_en": "2023-01-01T00:00:00Z",
+      "actualizado_en": "2023-01-01T00:00:00Z"
+    }
+  }
+]
