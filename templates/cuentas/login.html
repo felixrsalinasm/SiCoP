@@ -1,0 +1,24 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+    <div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; width: 100%; max-width: 400px;">
+        <h2 style="text-align: center; margin-top: 0;">Iniciar sesión</h2>
+        <form method="post" action="{% url 'cuentas:login' %}">
+            {% csrf_token %}
+            {% if form.errors %}
+                <p style="color: #e94560; text-align: center;">Usuario o contraseña incorrectos.</p>
+            {% endif %}
+            <div style="margin-bottom: 1rem;">
+                <label for="id_username" style="display: block; margin-bottom: 0.5rem;">Usuario:</label>
+                <input type="text" name="username" id="id_username" required style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label for="id_password" style="display: block; margin-bottom: 0.5rem;">Contraseña:</label>
+                <input type="password" name="password" id="id_password" required style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Iniciar sesión</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
