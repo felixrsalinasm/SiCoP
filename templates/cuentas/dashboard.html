@@ -1,8 +1,37 @@
 {% extends 'base/base.html' %}
 
 {% block contenido %}
-<h1>Bienvenido, {{ user.get_full_name|default:user.username }}</h1>
+<h1>Bienvenido, {{ nombre_mostrar }}</h1>
 <p>Rol actual: {{ user.get_rol_display }}</p>
+
+<!-- Estadísticas Generales -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem;">
+    <div style="background-color: #e94560; padding: 1.5rem; border-radius: 8px; text-align: center;">
+        <h2 style="margin: 0; font-size: 2.5rem;">{{ total_profesores_activos }}</h2>
+        <p style="margin: 0;">Profesores Activos</p>
+    </div>
+    
+    <div style="background-color: #4facfe; color: #1a1a2e; padding: 1.5rem; border-radius: 8px; text-align: center;">
+        <h2 style="margin: 0; font-size: 2.5rem;">{{ total_nombramientos_vigentes }}</h2>
+        <p style="margin: 0; font-weight: bold;">Nombramientos Vigentes</p>
+    </div>
+    
+    <div style="background-color: #f6d365; color: #1a1a2e; padding: 1.5rem; border-radius: 8px; text-align: center;">
+        <h2 style="margin: 0; font-size: 2.5rem;">{{ total_directores_activos }}</h2>
+        <p style="margin: 0; font-weight: bold;">Directores de Tesis</p>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+    <h3 style="margin-top: 0;">Estudiantes Activos por Programa</h3>
+    <ul style="margin-bottom: 0;">
+        {% for prog in programas_estudiantes %}
+        <li><strong>{{ prog.siglas }}:</strong> {{ prog.estudiantes_activos }} estudiantes</li>
+        {% empty %}
+        <li>No hay alumnos activos actualmente.</li>
+        {% endfor %}
+    </ul>
+</div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
     {% if user.es_admin or user.es_coordinador or user.es_secretaria %}
