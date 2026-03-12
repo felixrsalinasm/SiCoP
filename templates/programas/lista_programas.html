@@ -1,0 +1,59 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Programas</h1>
+    {% if user.es_admin %}
+        <a href="{% url 'programas:crear_programa' %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Nuevo programa</a>
+    {% endif %}
+</div>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Siglas</th>
+            <th style="padding: 1rem; text-align: left;">Nombre</th>
+            <th style="padding: 1rem; text-align: center;">Nivel</th>
+            <th style="padding: 1rem; text-align: left;">Coordinador Actual</th>
+            <th style="padding: 1rem; text-align: center;">Alumnos activos</th>
+            <th style="padding: 1rem; text-align: center;">Activo</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for prog in programas %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;"><strong>{{ prog.siglas }}</strong></td>
+            <td style="padding: 1rem;">{{ prog.nombre }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ prog.get_nivel_display }}</td>
+            <td style="padding: 1rem;">
+                {% with current=prog.historial_coordinadores.all|first %}
+                    {% if current and current.es_actual %}
+                        {{ current.profesor.get_grado_academico_display }} {{ current.profesor.persona.nombre_completo }}
+                    {% else %}
+                        <span style="color: #cccccc; font-style: italic;">Sin asignar</span>
+                    {% endif %}
+                {% endwith %}
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                {% comment %} In a real app we'd define a method or property filter for this but since rules forbid comments, doing it dynamically {% endcomment %}
+                {{ prog.estudiantes.count }}
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                {% if prog.activo %}<span style="color: #28a745;">Sí</span>{% else %}<span style="color: #dc3545;">No</span>{% endif %}
+            </td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'programas:detalle_programa' prog.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin %}
+                <a href="{% url 'programas:editar_programa' prog.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="padding: 1rem; text-align: center;">No hay programas registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
