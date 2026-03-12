@@ -10,6 +10,9 @@
             font-family: sans-serif;
             background-color: #1a1a2e;
             color: #ffffff;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
         }
         .navbar {
             background-color: #0f3460;
@@ -17,6 +20,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 10;
         }
         .navbar-brand {
             font-size: 1.5rem;
@@ -42,8 +46,40 @@
         .btn:hover {
             opacity: 0.9;
         }
+        .layout-wrapper {
+            display: flex;
+            flex: 1;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #13223f;
+            padding: 2rem 1rem;
+            border-right: 1px solid #0f3460;
+        }
+        .sidebar h4 {
+            color: #4facfe;
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        .sidebar a {
+            display: block;
+            color: #cccccc;
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: #0f3460;
+            color: #ffffff;
+        }
         .container {
+            flex: 1;
             padding: 2rem;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -53,15 +89,59 @@
         <div class="navbar-user">
             {% if user.is_authenticated %}
                 <span>{{ user.get_full_name|default:user.username }} ({{ user.get_rol_display }})</span>
-                <form method="post" action="/cuentas/logout/" style="margin: 0;">
+                <form method="post" action="{% url 'cuentas:logout' %}" style="margin: 0;">
                     {% csrf_token %}
                     <button type="submit" class="btn">Cerrar sesión</button>
                 </form>
             {% endif %}
         </div>
     </nav>
-    <main class="container">
-        {% block contenido %}{% endblock %}
-    </main>
+    <div class="layout-wrapper">
+        {% if user.is_authenticated %}
+        <aside class="sidebar">
+            <a href="{% url 'cuentas:dashboard' %}" style="font-weight: bold; color: #fff; background-color: #0f3460;">Dashboard</a>
+            
+            {% if user.es_admin or user.es_coordinador %}
+                <h4>Personas</h4>
+                <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
+                <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
+                <a href="{% url 'personas:lista_estudiantes' %}">Estudiantes</a>
+                
+                <h4>Programas</h4>
+                <a href="{% url 'programas:lista_programas' %}">Programas</a>
+                <a href="{% url 'programas:lista_laboratorios' %}">Laboratorios</a>
+                <a href="{% url 'programas:lista_coordinadores' %}">Coordinadores</a>
+                
+                <h4>Nombramientos</h4>
+                <a href="{% url 'nombramientos:lista_nombramientos' %}">Nombramientos</a>
+                <a href="{% url 'nombramientos:lista_tipos' %}">Tipos de Nombramiento</a>
+                
+                <h4>Tesis</h4>
+                <a href="{% url 'tesis:lista_directores' %}">Directores</a>
+                <a href="{% url 'tesis:lista_comite' %}">Comité Tutorial</a>
+                <a href="{% url 'tesis:lista_jurado' %}">Jurado de Examen</a>
+
+            {% elif user.es_secretaria %}
+                <h4>Personas</h4>
+                <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
+                <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
+                <a href="{% url 'personas:lista_estudiantes' %}">Estudiantes</a>
+                
+                <h4>Nombramientos</h4>
+                <a href="{% url 'nombramientos:lista_nombramientos' %}">Nombramientos</a>
+
+            {% elif user.es_profesor %}
+                <h4>Personal</h4>
+                {% if user.persona and user.persona.profesor %}
+                <a href="{% url 'personas:detalle_profesor' user.persona.profesor.pk %}">Mi Perfil</a>
+                {% endif %}
+            {% endif %}
+        </aside>
+        {% endif %}
+        
+        <main class="container">
+            {% block contenido %}{% endblock %}
+        </main>
+    </div>
 </body>
 </html>
