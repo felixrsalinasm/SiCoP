@@ -1,3 +1,4 @@
+from apps.historial.utils import registrar_accion
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy
@@ -14,6 +15,7 @@ ROLES_ADMIN_COORD = ['ADMIN', 'COORDINADOR']
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaLaboratorios(ListView):
     model = Laboratorio
+    paginate_by = 20
     template_name = 'programas/lista_laboratorios.html'
     context_object_name = 'laboratorios'
 
@@ -24,12 +26,24 @@ class CrearLaboratorio(CreateView):
     template_name = 'programas/form_laboratorio.html'
     success_url = reverse_lazy('programas:lista_laboratorios')
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'CREAR', 'Laboratorio', f'Crear registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
 class EditarLaboratorio(UpdateView):
     model = Laboratorio
     form_class = FormularioLaboratorio
     template_name = 'programas/form_laboratorio.html'
     success_url = reverse_lazy('programas:lista_laboratorios')
+
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'Laboratorio', f'Editar registro: {self.object}')
+        return response
 
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class DetalleLaboratorio(DetailView):
@@ -40,6 +54,7 @@ class DetalleLaboratorio(DetailView):
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaProgramas(ListView):
     model = Programa
+    paginate_by = 20
     template_name = 'programas/lista_programas.html'
     context_object_name = 'programas'
 
@@ -56,6 +71,12 @@ class CrearPrograma(CreateView):
     template_name = 'programas/form_programa.html'
     success_url = reverse_lazy('programas:lista_programas')
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'CREAR', 'Programa', f'Crear registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
 class EditarPrograma(UpdateView):
     model = Programa
@@ -63,9 +84,16 @@ class EditarPrograma(UpdateView):
     template_name = 'programas/form_programa.html'
     success_url = reverse_lazy('programas:lista_programas')
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'Programa', f'Editar registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class ListaCoordinadores(ListView):
     model = Coordinador
+    paginate_by = 20
     template_name = 'programas/lista_coordinadores.html'
     context_object_name = 'coordinadores'
     
@@ -85,7 +113,9 @@ class AsignarCoordinador(CreateView):
         if coordinador_actual:
             coordinador_actual.fecha_fin = timezone.now().date()
             coordinador_actual.save()
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'CREAR', 'Coordinador', f'Crear registro: {self.object}')
+        return response
 
 @method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
 class EditarCoordinador(UpdateView):
@@ -93,3 +123,9 @@ class EditarCoordinador(UpdateView):
     form_class = FormularioCoordinador
     template_name = 'programas/form_coordinador.html'
     success_url = reverse_lazy('programas:lista_coordinadores')
+
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'Coordinador', f'Editar registro: {self.object}')
+        return response

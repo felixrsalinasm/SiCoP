@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'apps.nombramientos',
     'apps.tesis',
     'apps.cuentas',
+    'apps.historial',
 ]
 
 MIDDLEWARE = [
@@ -87,3 +88,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/cuentas/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/cuentas/login/'
+
+ADMIN_SITE_HEADER = "SiCoP — CIC IPN"
+ADMIN_SITE_TITLE = "SiCoP Administración"
+ADMIN_INDEX_TITLE = "Panel de Control"

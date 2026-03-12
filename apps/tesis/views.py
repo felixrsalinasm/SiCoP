@@ -1,3 +1,4 @@
+from apps.historial.utils import registrar_accion
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, CreateView, UpdateView, View
 from django.urls import reverse_lazy, reverse
@@ -22,7 +23,7 @@ class ListaDirectoresTesis(ListView):
     model = DirectorTesis
     template_name = 'tesis/lista_directores.html'
     context_object_name = 'directores'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona', 'estudiante__programa')
@@ -48,7 +49,9 @@ class AsignarDirectorTesis(CreateView):
     def form_valid(self, form):
         try:
             # Model clean() is called automatically by form, but catch IntegrityError just in case
-            return super().form_valid(form)
+            response = super().form_valid(form)
+            registrar_accion(self.request, 'CREAR', 'DirectorTesis', f'Crear registro: {self.object}')
+            return response
         except IntegrityError:
             form.add_error(None, 'Este profesor ya dirige a este estudiante.')
             return self.form_invalid(form)
@@ -59,6 +62,12 @@ class EditarDirectorTesis(UpdateView):
     fields = ['fecha_termino', 'activo']
     template_name = 'tesis/form_director.html'
     success_url = reverse_lazy('tesis:lista_directores')
+
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'DirectorTesis', f'Editar registro: {self.object}')
+        return response
 
 @method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
 class DesactivarDirectorTesis(View):
@@ -77,7 +86,7 @@ class ListaComiteTutorial(ListView):
     model = ComiteTutorial
     template_name = 'tesis/lista_comite.html'
     context_object_name = 'comites'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona')
@@ -107,6 +116,7 @@ class AsignarComiteTutorial(CreateView):
             miembros_activos = ComiteTutorial.objects.filter(estudiante=estudiante, activo=True).count()
             if miembros_activos >= 3:
                 messages.warning(self.request, f'El comité de {estudiante.persona.nombre_completo} cuenta ahora con {miembros_activos} miembros activos.')
+            registrar_accion(self.request, 'CREAR', 'ComiteTutorial', f'Crear registro: {self.object}')
             return response
         except IntegrityError:
             form.add_error(None, 'Este profesor ya es miembro del comité tutorial de este estudiante.')
@@ -121,12 +131,18 @@ class EditarComiteTutorial(UpdateView):
 
 # --- JURADO DE EXAMEN ---
 
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'ComiteTutorial', f'Editar registro: {self.object}')
+        return response
+
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaJuradoExamen(ListView):
     model = JuradoExamen
     template_name = 'tesis/lista_jurado.html'
     context_object_name = 'jurados'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona')
@@ -149,7 +165,9 @@ class AsignarJuradoExamen(CreateView):
 
     def form_valid(self, form):
         try:
-            return super().form_valid(form)
+            response = super().form_valid(form)
+            registrar_accion(self.request, 'CREAR', 'JuradoExamen', f'Crear registro: {self.object}')
+            return response
         except IntegrityError:
             form.add_error(None, 'Este profesor ya forma parte de este jurado.')
             return self.form_invalid(form)
@@ -160,6 +178,12 @@ class EditarJuradoExamen(UpdateView):
     fields = ['rol', 'fecha_examen', 'resultado']
     template_name = 'tesis/form_jurado.html'
     success_url = reverse_lazy('tesis:lista_jurado')
+
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        registrar_accion(self.request, 'EDITAR', 'JuradoExamen', f'Editar registro: {self.object}')
+        return response
 
 @method_decorator(rol_requerido(*ROLES_RESULTADO), name='dispatch')
 class RegistrarResultadoExamen(View):
