@@ -100,27 +100,6 @@ class VistaExportarNombramientosCSV(View):
             ])
         return response
 
-@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
-class VistaExportarNombramientosCSV(View):
-    def get(self, request, *args, **kwargs):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="nombramientos_CIC.csv"'
-        response.write(u'\ufeff'.encode('utf8'))
-        writer = csv.writer(response)
-        writer.writerow(['Profesor', 'Tipo', 'Institucion', 'Clave', 'Fecha Emision', 'Fecha Vencimiento'])
-        for nom in Nombramiento.objects.select_related('tipo').all():
-            rel = nom.profesores_nombramiento.first()
-            prof_nombre = rel.profesor.persona.nombre_completo() if rel else '-'
-            writer.writerow([
-                prof_nombre,
-                nom.tipo.nombramiento,
-                nom.tipo.get_origen_display(),
-                nom.clave,
-                nom.fecha_emision,
-                nom.fecha_vencimiento
-            ])
-        return response
-
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class CrearNombramiento(CreateView):
     model = Nombramiento

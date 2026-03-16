@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from apps.cuentas.models import Usuario
 
+
 class TestCuentas(TestCase):
     def setUp(self):
         self.cliente = Client()

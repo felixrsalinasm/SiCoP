@@ -16,7 +16,6 @@ ROLES_ESCRITURA = ['ADMIN', 'SECRETARIA']
 ROLES_ADMIN = ['ADMIN']
 ROLES_RESULTADO = ['ADMIN', 'COORDINADOR']
 
-# --- DIRECTORES DE TESIS ---
 
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaDirectoresTesis(ListView):
@@ -29,15 +28,16 @@ class ListaDirectoresTesis(ListView):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona', 'estudiante__programa')
         programa_id = self.request.GET.get('programa')
         estado = self.request.GET.get('estado')
-        
+
         if programa_id:
             qs = qs.filter(estudiante__programa_id=programa_id)
         if estado == 'activo':
             qs = qs.filter(activo=True)
         elif estado == 'inactivo':
             qs = qs.filter(activo=False)
-            
+
         return qs.order_by('-fecha_asignacion')
+
 
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class AsignarDirectorTesis(CreateView):
@@ -48,13 +48,13 @@ class AsignarDirectorTesis(CreateView):
 
     def form_valid(self, form):
         try:
-            # Model clean() is called automatically by form, but catch IntegrityError just in case
             response = super().form_valid(form)
             registrar_accion(self.request, 'CREAR', 'DirectorTesis', f'Crear registro: {self.object}')
             return response
         except IntegrityError:
             form.add_error(None, 'Este profesor ya dirige a este estudiante.')
             return self.form_invalid(form)
+
 
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class EditarDirectorTesis(UpdateView):
@@ -63,11 +63,11 @@ class EditarDirectorTesis(UpdateView):
     template_name = 'tesis/form_director.html'
     success_url = reverse_lazy('tesis:lista_directores')
 
-
     def form_valid(self, form):
         response = super().form_valid(form)
         registrar_accion(self.request, 'EDITAR', 'DirectorTesis', f'Editar registro: {self.object}')
         return response
+
 
 @method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
 class DesactivarDirectorTesis(View):
@@ -79,7 +79,6 @@ class DesactivarDirectorTesis(View):
         messages.success(request, 'Director desactivado correctamente.')
         return redirect('tesis:lista_directores')
 
-# --- COMITÉ TUTORIAL ---
 
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaComiteTutorial(ListView):
@@ -92,15 +91,16 @@ class ListaComiteTutorial(ListView):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona')
         estudiante_id = self.request.GET.get('estudiante')
         estado = self.request.GET.get('estado')
-        
+
         if estudiante_id:
             qs = qs.filter(estudiante_id=estudiante_id)
         if estado == 'activo':
             qs = qs.filter(activo=True)
         elif estado == 'inactivo':
             qs = qs.filter(activo=False)
-            
+
         return qs.order_by('-fecha_asignacion')
+
 
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class AsignarComiteTutorial(CreateView):
@@ -115,12 +115,13 @@ class AsignarComiteTutorial(CreateView):
             estudiante = form.cleaned_data['estudiante']
             miembros_activos = ComiteTutorial.objects.filter(estudiante=estudiante, activo=True).count()
             if miembros_activos >= 3:
-                messages.warning(self.request, f'El comité de {estudiante.persona.nombre_completo} cuenta ahora con {miembros_activos} miembros activos.')
+                messages.warning(self.request, f'El comite de {estudiante.persona.nombre_completo} cuenta ahora con {miembros_activos} miembros activos.')
             registrar_accion(self.request, 'CREAR', 'ComiteTutorial', f'Crear registro: {self.object}')
             return response
         except IntegrityError:
-            form.add_error(None, 'Este profesor ya es miembro del comité tutorial de este estudiante.')
+            form.add_error(None, 'Este profesor ya es miembro del comite tutorial de este estudiante.')
             return self.form_invalid(form)
+
 
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class EditarComiteTutorial(UpdateView):
@@ -129,13 +130,11 @@ class EditarComiteTutorial(UpdateView):
     template_name = 'tesis/form_comite.html'
     success_url = reverse_lazy('tesis:lista_comite')
 
-# --- JURADO DE EXAMEN ---
-
-
     def form_valid(self, form):
         response = super().form_valid(form)
         registrar_accion(self.request, 'EDITAR', 'ComiteTutorial', f'Editar registro: {self.object}')
         return response
+
 
 @method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
 class ListaJuradoExamen(ListView):
@@ -148,13 +147,14 @@ class ListaJuradoExamen(ListView):
         qs = super().get_queryset().select_related('estudiante__persona', 'profesor__persona')
         tipo_examen = self.request.GET.get('tipo_examen')
         resultado = self.request.GET.get('resultado')
-        
+
         if tipo_examen:
             qs = qs.filter(tipo_examen=tipo_examen)
         if resultado:
             qs = qs.filter(resultado=resultado)
-            
+
         return qs.order_by('-fecha_examen', 'estudiante')
+
 
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class AsignarJuradoExamen(CreateView):
@@ -172,6 +172,7 @@ class AsignarJuradoExamen(CreateView):
             form.add_error(None, 'Este profesor ya forma parte de este jurado.')
             return self.form_invalid(form)
 
+
 @method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
 class EditarJuradoExamen(UpdateView):
     model = JuradoExamen
@@ -179,17 +180,15 @@ class EditarJuradoExamen(UpdateView):
     template_name = 'tesis/form_jurado.html'
     success_url = reverse_lazy('tesis:lista_jurado')
 
-
     def form_valid(self, form):
         response = super().form_valid(form)
         registrar_accion(self.request, 'EDITAR', 'JuradoExamen', f'Editar registro: {self.object}')
         return response
 
+
 @method_decorator(rol_requerido(*ROLES_RESULTADO), name='dispatch')
 class RegistrarResultadoExamen(View):
     def get(self, request, pk):
-        # We pass a jurado item to identify the group. Wait, the route is /tesis/jurado/<int:pk>/resultado/
-        # Since the jurado is per student and exam type, pk could be any of the jurado members.
         jurado_ref = get_object_or_404(JuradoExamen, pk=pk)
         grupo = JuradoExamen.objects.filter(estudiante=jurado_ref.estudiante, tipo_examen=jurado_ref.tipo_examen)
         return render(request, 'tesis/form_resultado.html', {'grupo': grupo, 'referencia': jurado_ref})
@@ -197,24 +196,24 @@ class RegistrarResultadoExamen(View):
     def post(self, request, pk):
         jurado_ref = get_object_or_404(JuradoExamen, pk=pk)
         grupo = JuradoExamen.objects.filter(estudiante=jurado_ref.estudiante, tipo_examen=jurado_ref.tipo_examen)
-        
+
         todos_aprobados = True
         for miembro in grupo:
             resultado_str = request.POST.get(f'resultado_{miembro.pk}')
             if resultado_str in [JuradoExamen.Resultado.APROBADO, JuradoExamen.Resultado.NO_APROBADO, JuradoExamen.Resultado.PENDIENTE]:
                 miembro.resultado = resultado_str
                 miembro.save()
-            
+
             if miembro.resultado != JuradoExamen.Resultado.APROBADO:
                 todos_aprobados = False
-                
+
         if todos_aprobados:
             estudiante = jurado_ref.estudiante
             if estudiante.estado == 'ACTIVO':
                 estudiante.estado = 'EGRESADO'
                 estudiante.save()
-                messages.success(request, 'Todos los miembros del jurado han aprobado. El estado del estudiante ha cambiado automáticamente a EGRESADO.')
+                messages.success(request, 'Todos los miembros del jurado han aprobado. El estado del estudiante ha cambiado automaticamente a EGRESADO.')
         else:
             messages.info(request, 'Los resultados del jurado han sido guardados.')
-            
+
         return redirect('tesis:lista_jurado')
