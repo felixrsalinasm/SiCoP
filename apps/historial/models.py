@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+
 class Registro(models.Model):
     class Accion(models.TextChoices):
         CREAR = 'CREAR', 'Crear'
@@ -18,3 +19,6 @@ class Registro(models.Model):
         verbose_name = 'registro de historial'
         verbose_name_plural = 'registros de historial'
         ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.fecha:%Y-%m-%d %H:%M} — {self.accion} — {self.modulo}'

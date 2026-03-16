@@ -9,6 +9,7 @@ from apps.programas.models import Programa
 from apps.nombramientos.models import Nombramiento
 from apps.tesis.models import DirectorTesis
 
+
 class VistaLogin(LoginView):
     template_name = 'cuentas/login.html'
 
@@ -24,8 +25,10 @@ class VistaLogin(LoginView):
                 return '/dashboard/'
         return '/dashboard/'
 
+
 class VistaLogout(LogoutView):
     next_page = '/cuentas/login/'
+
 
 class VistaDashboard(LoginRequiredMixin, TemplateView):
     template_name = 'cuentas/dashboard.html'
@@ -34,21 +37,19 @@ class VistaDashboard(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         usuario = self.request.user
-        
-        # Bienvenida con nombre real
+
         if hasattr(usuario, 'persona'):
             context['nombre_mostrar'] = usuario.persona.nombre_completo
         else:
             context['nombre_mostrar'] = usuario.username
 
-        # Estadísticas
         context['total_profesores_activos'] = Profesor.objects.filter(activo=True).count()
-        
+
         context['programas_estudiantes'] = Programa.objects.annotate(
             estudiantes_activos=Count('estudiantes', filter=Q(estudiantes__estado='ACTIVO'))
         ).filter(activo=True)
-        
+
         context['total_nombramientos_vigentes'] = Nombramiento.objects.filter(fecha_vencimiento__gte=timezone.now().date()).count()
         context['total_directores_activos'] = DirectorTesis.objects.filter(activo=True).count()
-        
+
         return context

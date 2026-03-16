@@ -4,6 +4,9 @@ __pycache__/
 *.pyo
 db.sqlite3
 .env
-media/
 *.log
+*.txt
+!requirements.txt
+media/
 .DS_Store
+staticfiles/
