@@ -1,0 +1,16 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="max-width: 500px; margin: 2rem auto; text-align: center;">
+    <div style="background-color: #0f3460; padding: 2rem; border-radius: 8px;">
+        <h1 style="color: #e94560;">Confirmar eliminacion</h1>
+        <p style="margin: 1.5rem 0;">Esta seguro de que desea eliminar <strong>{{ object }}</strong>?</p>
+        <p style="color: #dc3545; font-size: 0.9em;">Esta accion no se puede deshacer.</p>
+        <form method="post" style="margin-top: 2rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background-color: #dc3545; margin-right: 1rem;">Eliminar</button>
+            <a href="javascript:history.back()" class="btn" style="background-color: #6c757d;">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

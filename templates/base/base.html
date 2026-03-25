@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiCoP — CIC IPN</title>
+    <title>Sistema de Coordinacion de Posgrado</title>
     <style>
         body {
             margin: 0;
@@ -85,13 +85,13 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="/dashboard/" class="navbar-brand">SiCoP — CIC IPN</a>
+        <a href="/dashboard/" class="navbar-brand">Sistema de Coordinacion de Posgrado</a>
         <div class="navbar-user">
             {% if user.is_authenticated %}
                 <span>{{ user.get_full_name|default:user.username }} ({{ user.get_rol_display }})</span>
                 <form method="post" action="{% url 'cuentas:logout' %}" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn">Cerrar sesión</button>
+                    <button type="submit" class="btn">Cerrar sesion</button>
                 </form>
             {% endif %}
         </div>
@@ -100,25 +100,26 @@
         {% if user.is_authenticated %}
         <aside class="sidebar">
             <a href="{% url 'cuentas:dashboard' %}" style="font-weight: bold; color: #fff; background-color: #0f3460;">Dashboard</a>
-            
+
             {% if user.es_admin or user.es_coordinador %}
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
-                <a href="{% url 'personas:lista_estudiantes' %}">Estudiantes</a>
-                
+                <a href="{% url 'personas:lista_estudiantes' %}">Alumnos</a>
+
                 <h4>Programas</h4>
                 <a href="{% url 'programas:lista_programas' %}">Programas</a>
                 <a href="{% url 'programas:lista_laboratorios' %}">Laboratorios</a>
                 <a href="{% url 'programas:lista_coordinadores' %}">Coordinadores</a>
-                
+
                 <h4>Nombramientos</h4>
                 <a href="{% url 'nombramientos:lista_nombramientos' %}">Nombramientos</a>
                 <a href="{% url 'nombramientos:lista_tipos' %}">Tipos de Nombramiento</a>
-                
+
                 <h4>Tesis</h4>
+                <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
                 <a href="{% url 'tesis:lista_directores' %}">Directores</a>
-                <a href="{% url 'tesis:lista_comite' %}">Comité Tutorial</a>
+                <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>
                 <a href="{% url 'tesis:lista_jurado' %}">Jurado de Examen</a>
 
                 <h4>Sistema</h4>
@@ -128,10 +129,15 @@
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
-                <a href="{% url 'personas:lista_estudiantes' %}">Estudiantes</a>
-                
+                <a href="{% url 'personas:lista_estudiantes' %}">Alumnos</a>
+
                 <h4>Nombramientos</h4>
                 <a href="{% url 'nombramientos:lista_nombramientos' %}">Nombramientos</a>
+
+                <h4>Tesis</h4>
+                <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
+                <a href="{% url 'tesis:lista_directores' %}">Directores</a>
+                <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>
 
             {% elif user.es_profesor %}
                 <h4>Personal</h4>
@@ -141,7 +147,7 @@
             {% endif %}
         </aside>
         {% endif %}
-        
+
         <main class="container">
             {% block contenido %}{% endblock %}
         </main>

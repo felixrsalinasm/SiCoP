@@ -1,11 +1,13 @@
 from django.db import models
 
+
 class ModeloBase(models.Model):
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
+
 
 class Persona(ModeloBase):
     paterno = models.CharField(max_length=45)
@@ -16,7 +18,11 @@ class Persona(ModeloBase):
     cvu = models.CharField(max_length=10, unique=True, blank=True, null=True)
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=15, blank=True)
-    genero = models.CharField(max_length=2, choices=[('M','Masculino'),('F','Femenino'),('NB','No binario'),('NE','No especificado')], blank=True)
+    genero = models.CharField(
+        max_length=2,
+        choices=[('M', 'Masculino'), ('F', 'Femenino'), ('NB', 'No binario'), ('NE', 'No especificado')],
+        blank=True
+    )
     fecha_nacimiento = models.DateField(blank=True, null=True)
     foto = models.ImageField(upload_to='personas/fotos/', blank=True, null=True)
     usuario = models.OneToOneField('cuentas.Usuario', on_delete=models.SET_NULL, null=True, blank=True, related_name='persona')
@@ -29,13 +35,23 @@ class Persona(ModeloBase):
     def __str__(self):
         return f'{self.paterno} {self.materno}, {self.nombres}'
 
+    @property
     def nombre_completo(self):
         return f'{self.nombres} {self.paterno} {self.materno}'.strip()
 
+
 class Profesor(ModeloBase):
     persona = models.OneToOneField(Persona, on_delete=models.CASCADE, related_name='profesor')
-    grado_academico = models.CharField(max_length=20, choices=[('LICENCIATURA','Licenciatura'),('MAESTRIA','Maestría'),('DOCTORADO','Doctorado')])
-    laboratorio = models.ForeignKey('programas.Laboratorio', on_delete=models.SET_NULL, null=True, blank=True, related_name='profesores')
+    grado_academico = models.CharField(
+        max_length=20,
+        choices=[('LICENCIATURA', 'Licenciatura'), ('MAESTRIA', 'Maestria'), ('DOCTORADO', 'Doctorado')]
+    )
+    laboratorio = models.ForeignKey(
+        'programas.Laboratorio', on_delete=models.SET_NULL, null=True, blank=True, related_name='profesores'
+    )
+    numero_empleado = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    departamento = models.CharField(max_length=100, blank=True)
+    orcid = models.CharField(max_length=25, unique=True, blank=True, null=True, verbose_name='ORCID')
     fecha_ingreso_ipn = models.DateField(blank=True, null=True)
     fecha_ingreso_cic = models.DateField(blank=True, null=True)
     es_externo = models.BooleanField(default=False)
@@ -55,6 +71,7 @@ class Profesor(ModeloBase):
     def puede_dirigir_mas_alumnos(self):
         return self.total_alumnos_activos() < 4
 
+
 class Estudiante(ModeloBase):
     class Estado(models.TextChoices):
         ACTIVO = 'ACTIVO', 'Activo'
@@ -67,14 +84,14 @@ class Estudiante(ModeloBase):
     matricula = models.CharField(max_length=10, unique=True)
     programa = models.ForeignKey('programas.Programa', on_delete=models.PROTECT, related_name='estudiantes')
     generacion = models.IntegerField()
-    modalidad = models.CharField(max_length=2, choices=[('TC','Tiempo completo'),('TP','Tiempo parcial')], default='TC')
+    modalidad = models.CharField(max_length=2, choices=[('TC', 'Tiempo completo'), ('TP', 'Tiempo parcial')], default='TC')
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.ACTIVO)
     fecha_ingreso = models.DateField()
     fecha_egreso = models.DateField(blank=True, null=True)
 
     class Meta:
-        verbose_name = 'estudiante'
-        verbose_name_plural = 'estudiantes'
+        verbose_name = 'alumno'
+        verbose_name_plural = 'alumnos'
         ordering = ['matricula']
 
     def __str__(self):

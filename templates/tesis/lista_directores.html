@@ -10,10 +10,6 @@
 
 <form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
     <div style="flex: 1;">
-        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">ID Programa</label>
-        <input type="number" name="programa" value="{{ request.GET.programa|default:'' }}" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;" placeholder="Ej. 1">
-    </div>
-    <div style="flex: 1;">
         <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Estado</label>
         <select name="estado" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
             <option value="">Todos</option>
@@ -26,14 +22,21 @@
     </div>
 </form>
 
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.8rem; border-radius: 4px; margin-bottom: 0.5rem; background-color: {% if message.tags == 'success' %}#28a745{% elif message.tags == 'error' %}#dc3545{% else %}#0f3460{% endif %};">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
     <thead style="background-color: #0f3460;">
         <tr>
-            <th style="padding: 1rem; text-align: left;">Estudiante</th>
-            <th style="padding: 1rem; text-align: left;">Programa</th>
+            <th style="padding: 1rem; text-align: left;">Tesis</th>
             <th style="padding: 1rem; text-align: left;">Director</th>
-            <th style="padding: 1rem; text-align: center;">¿Codirector?</th>
-            <th style="padding: 1rem; text-align: left;">Fecha asignación</th>
+            <th style="padding: 1rem; text-align: center;">Tipo</th>
+            <th style="padding: 1rem; text-align: left;">Fecha asignacion</th>
             <th style="padding: 1rem; text-align: center;">Activo</th>
             <th style="padding: 1rem; text-align: center;">Acciones</th>
         </tr>
@@ -41,47 +44,33 @@
     <tbody>
         {% for obj in directores %}
         <tr style="border-bottom: 1px solid #0f3460;">
-            <td style="padding: 1rem;">{{ obj.estudiante.persona.nombre_completo }}</td>
-            <td style="padding: 1rem;">{{ obj.estudiante.programa.siglas }}</td>
-            <td style="padding: 1rem;">{{ obj.profesor.get_grado_academico_display }} {{ obj.profesor.persona.nombre_completo }}</td>
-            <td style="padding: 1rem; text-align: center;">
-                {% if obj.es_codirector %}<span style="color: #4facfe;">Sí</span>{% else %}<span style="color: #cccccc;">No</span>{% endif %}
-            </td>
+            <td style="padding: 1rem;">{{ obj.tesis.titulo|default:"—"|truncatechars:40 }}</td>
+            <td style="padding: 1rem;">{{ obj.profesor.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ obj.get_tipo_direccion_display }}</td>
             <td style="padding: 1rem;">{{ obj.fecha_asignacion }}</td>
             <td style="padding: 1rem; text-align: center;">
                 {% if obj.activo %}
-                    <span style="color: #28a745; font-weight: bold;">✓ Sí</span>
+                    <span style="color: #28a745; font-weight: bold;">Si</span>
                 {% else %}
-                    <span style="color: #dc3545; font-weight: bold;">✗ No</span>
+                    <span style="color: #dc3545; font-weight: bold;">No</span>
                 {% endif %}
             </td>
             <td style="padding: 1rem; text-align: center;">
                 {% if user.es_admin or user.es_secretaria %}
                 <a href="{% url 'tesis:editar_director' obj.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
                 {% endif %}
-                {% if user.es_admin and obj.activo %}
-                <a href="#" onclick="if(confirm('¿Desactivar director?')) { document.getElementById('desactivar-{{ obj.pk }}').submit(); return false; }" style="color: #e94560; text-decoration: none;">Desactivar</a>
-                <form id="desactivar-{{ obj.pk }}" method="post" action="{% url 'tesis:desactivar_director' obj.pk %}" style="display: none;">
-                    {% csrf_token %}
-                </form>
+                {% if user.es_admin %}
+                <a href="{% url 'tesis:eliminar_director' obj.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="7" style="padding: 1rem; text-align: center;">No se encontraron registros.</td>
+            <td colspan="6" style="padding: 1rem; text-align: center;">No se encontraron registros.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-
-
-    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-        <a href="?programa={{ request.GET.programa|default:'' }}&estado={{ request.GET.estado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
-    {% endif %}
-</div>
-{% endif %}
 
 {% if is_paginated %}
 <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
@@ -90,9 +79,7 @@
     {% else %}
         <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Anterior</span>
     {% endif %}
-
-    <span style="font-weight: bold;">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
-
+    <span style="font-weight: bold;">Pagina {{ page_obj.number }} de {{ paginator.num_pages }}</span>
     {% if page_obj.has_next %}
         <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Siguiente</a>
     {% else %}

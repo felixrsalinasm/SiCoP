@@ -1,0 +1,98 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Lista de Tesis</h1>
+    {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'tesis:crear_tesis' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nueva tesis</a>
+    {% endif %}
+</div>
+
+<form method="get" style="background-color: #0f3460; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 2;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Buscar</label>
+        <input type="text" name="q" placeholder="Titulo de tesis" value="{{ request.GET.q|default:'' }}" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none; box-sizing: border-box;">
+    </div>
+    <div style="flex: 1;">
+        <label style="display: block; font-size: 0.9em; margin-bottom: 0.2rem;">Estado</label>
+        <select name="estado" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="">Todos</option>
+            <option value="EN_PROCESO" {% if request.GET.estado == 'EN_PROCESO' %}selected{% endif %}>En proceso</option>
+            <option value="CONCLUIDA" {% if request.GET.estado == 'CONCLUIDA' %}selected{% endif %}>Concluida</option>
+            <option value="TITULADA" {% if request.GET.estado == 'TITULADA' %}selected{% endif %}>Titulada</option>
+        </select>
+    </div>
+    <div>
+        <button type="submit" class="btn" style="padding: 0.6rem 2rem;">Filtrar</button>
+    </div>
+</form>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+    {% for message in messages %}
+    <div style="padding: 0.8rem; border-radius: 4px; margin-bottom: 0.5rem; background-color: {% if message.tags == 'success' %}#28a745{% elif message.tags == 'error' %}#dc3545{% else %}#0f3460{% endif %};">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Titulo</th>
+            <th style="padding: 1rem; text-align: left;">Alumno</th>
+            <th style="padding: 1rem; text-align: center;">Programa</th>
+            <th style="padding: 1rem; text-align: center;">Estado</th>
+            <th style="padding: 1rem; text-align: left;">Fecha registro</th>
+            <th style="padding: 1rem; text-align: center;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in tesis_lista %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ t.titulo|truncatechars:60 }}</td>
+            <td style="padding: 1rem;">{{ t.alumno.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ t.programa.siglas }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <span style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.85em;
+                    {% if t.estado == 'EN_PROCESO' %}background-color: #f6d365; color: #1a1a2e;{% elif t.estado == 'CONCLUIDA' %}background-color: #4facfe; color: #1a1a2e;{% else %}background-color: #28a745;{% endif %}">
+                    {{ t.get_estado_display }}
+                </span>
+            </td>
+            <td style="padding: 1rem;">{{ t.fecha_registro }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <a href="{% url 'tesis:detalle_tesis' t.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
+                {% if user.es_admin or user.es_secretaria %}
+                <a href="{% url 'tesis:editar_tesis' t.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                {% endif %}
+                {% if user.es_admin %}
+                <a href="{% url 'tesis:eliminar_tesis' t.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="padding: 1rem; text-align: center;">No se encontraron tesis.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Anterior</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Anterior</span>
+    {% endif %}
+    <span style="font-weight: bold;">Pagina {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn">Siguiente</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Siguiente</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

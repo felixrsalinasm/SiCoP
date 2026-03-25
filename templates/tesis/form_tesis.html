@@ -1,0 +1,46 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <h1>{% if form.instance.pk %}Editar Tesis{% else %}Registrar Tesis{% endif %}</h1>
+
+    {% if messages %}
+    <div style="margin-bottom: 1rem;">
+        {% for message in messages %}
+        <div style="padding: 0.8rem; border-radius: 4px; background-color: {% if message.tags == 'error' %}#dc3545{% else %}#0f3460{% endif %};">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" style="background-color: #0f3460; padding: 2rem; border-radius: 8px;">
+        {% csrf_token %}
+        {% for field in form %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: bold;">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+            <span style="color: #e94560; font-size: 0.85em;">{{ error }}</span>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+        <div style="color: #e94560; margin-bottom: 1rem;">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn">Guardar</button>
+            <a href="{% url 'tesis:lista_tesis' %}" class="btn" style="background-color: #6c757d;">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    form input, form select, form textarea {
+        width: 100%; padding: 0.5rem; border-radius: 4px; border: none;
+        background-color: #1a1a2e; color: #ffffff; box-sizing: border-box;
+    }
+</style>
+{% endblock %}

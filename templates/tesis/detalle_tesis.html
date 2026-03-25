@@ -1,0 +1,73 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Detalle de Tesis</h1>
+    <div>
+        {% if user.es_admin or user.es_secretaria %}
+        <a href="{% url 'tesis:editar_tesis' tesis.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e; margin-right: 0.5rem;">Editar</a>
+        {% endif %}
+        <a href="{% url 'tesis:lista_tesis' %}" class="btn">Volver a lista</a>
+    </div>
+</div>
+
+<div style="background-color: #0f3460; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+    <h2 style="margin-top: 0;">{{ tesis.titulo }}</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+        <div><strong>Alumno:</strong> {{ tesis.alumno.persona.nombre_completo }}</div>
+        <div><strong>Programa:</strong> {{ tesis.programa }}</div>
+        <div><strong>Estado:</strong> {{ tesis.get_estado_display }}</div>
+        <div><strong>Fecha de registro:</strong> {{ tesis.fecha_registro }}</div>
+    </div>
+    {% if tesis.resumen %}
+    <div style="margin-top: 1rem;">
+        <strong>Resumen:</strong>
+        <p style="margin-top: 0.5rem;">{{ tesis.resumen }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<h3>Directores</h3>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 0.8rem; text-align: left;">Profesor</th>
+            <th style="padding: 0.8rem; text-align: center;">Tipo</th>
+            <th style="padding: 0.8rem; text-align: left;">Fecha asignacion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in directores %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 0.8rem;">{{ d.profesor.persona.nombre_completo }}</td>
+            <td style="padding: 0.8rem; text-align: center;">{{ d.get_tipo_direccion_display }}</td>
+            <td style="padding: 0.8rem;">{{ d.fecha_asignacion }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="padding: 0.8rem; text-align: center;">Sin directores asignados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Comite Tutorial</h3>
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 0.8rem; text-align: left;">Profesor</th>
+            <th style="padding: 0.8rem; text-align: center;">Rol</th>
+            <th style="padding: 0.8rem; text-align: left;">Fecha asignacion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in comite %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 0.8rem;">{{ c.profesor.persona.nombre_completo }}</td>
+            <td style="padding: 0.8rem; text-align: center;">{{ c.rol|default:"—" }}</td>
+            <td style="padding: 0.8rem;">{{ c.fecha_asignacion }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="padding: 0.8rem; text-align: center;">Sin comite asignado.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
