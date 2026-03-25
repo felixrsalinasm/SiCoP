@@ -18,6 +18,21 @@ from apps.historial.models import Registro
 def crear_datos_prueba():
     print('Iniciando carga de datos de prueba...')
 
+    user_admin, created = Usuario.objects.get_or_create(
+        username='admin',
+        defaults={'rol': Usuario.Roles.ADMIN, 'is_staff': True, 'is_superuser': True}
+    )
+    if created:
+        user_admin.set_password('Admin1234!')
+        user_admin.save()
+        print('  Usuario admin')
+    else:
+        if user_admin.rol != 'ADMIN':
+            user_admin.rol = 'ADMIN'
+            user_admin.save()
+
+
+
     user_coord, created = Usuario.objects.get_or_create(
         username='coordinador1',
         defaults={'rol': Usuario.Roles.COORDINADOR}

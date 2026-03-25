@@ -18,14 +18,14 @@ ROLES_ESCRITURA = ['ADMIN', 'SECRETARIA']
 ROLES_ADMIN = ['ADMIN']
 ROLES_ADMIN_COORD = ['ADMIN', 'COORDINADOR']
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class ListaTiposNombramiento(ListView):
     model = CatTipoNombramiento
     paginate_by = 20
     template_name = 'nombramientos/lista_tipos.html'
     context_object_name = 'tipos'
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class CrearTipoNombramiento(CreateView):
     model = CatTipoNombramiento
     form_class = FormularioTipoNombramiento
@@ -38,7 +38,7 @@ class CrearTipoNombramiento(CreateView):
         registrar_accion(self.request, 'CREAR', 'TipoNombramiento', f'Crear registro: {self.object}')
         return response
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class EditarTipoNombramiento(UpdateView):
     model = CatTipoNombramiento
     form_class = FormularioTipoNombramiento
@@ -89,7 +89,7 @@ class VistaExportarNombramientosCSV(View):
         writer.writerow(['Profesor', 'Tipo', 'Institucion', 'Clave', 'Fecha Emision', 'Fecha Vencimiento'])
         for nom in Nombramiento.objects.select_related('tipo').all():
             rel = nom.profesores_nombramiento.first()
-            prof_nombre = rel.profesor.persona.nombre_completo() if rel else '-'
+            prof_nombre = rel.profesor.persona.nombre_completo if rel else '-'
             writer.writerow([
                 prof_nombre,
                 nom.tipo.nombramiento,

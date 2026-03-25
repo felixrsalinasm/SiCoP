@@ -298,7 +298,7 @@ class VistaExportarProfesoresCSV(View):
         writer.writerow(['Nombre Completo', 'Grado', 'Laboratorio', 'Correo', 'Activo'])
         for prof in Profesor.objects.select_related('persona', 'laboratorio').all():
             writer.writerow([
-                prof.persona.nombre_completo(),
+                prof.persona.nombre_completo,
                 prof.get_grado_academico_display(),
                 prof.laboratorio.nombre if prof.laboratorio else '-',
                 prof.persona.email,
@@ -316,7 +316,7 @@ class VistaExportarEstudiantesCSV(View):
         writer.writerow(['Nombre Completo', 'Matricula', 'Programa', 'Generacion', 'Modalidad', 'Estado', 'Correo'])
         for est in Estudiante.objects.select_related('persona', 'programa').all():
             writer.writerow([
-                est.persona.nombre_completo(),
+                est.persona.nombre_completo,
                 est.matricula,
                 est.programa.siglas,
                 est.generacion,

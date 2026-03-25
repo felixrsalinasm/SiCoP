@@ -3,13 +3,15 @@ from .views import (
     ListaNombramientos, CrearNombramiento, DetalleNombramiento, EditarNombramiento, EliminarNombramiento,
     ListaTiposNombramiento, CrearTipoNombramiento, EditarTipoNombramiento,
     AsignarNombramientoProfesor, EliminarNombramientoProfesor,
-    AsignarNombramientoPrograma, EliminarNombramientoPrograma
+    AsignarNombramientoPrograma, EliminarNombramientoPrograma,
+    VistaExportarNombramientosCSV
 )
 
 app_name = 'nombramientos'
 
 urlpatterns = [
     path('', ListaNombramientos.as_view(), name='lista_nombramientos'),
+    path('exportar/', VistaExportarNombramientosCSV.as_view(), name='exportar_nombramientos_csv'),
     path('nuevo/', CrearNombramiento.as_view(), name='crear_nombramiento'),
     path('<int:pk>/', DetalleNombramiento.as_view(), name='detalle_nombramiento'),
     path('<int:pk>/editar/', EditarNombramiento.as_view(), name='editar_nombramiento'),

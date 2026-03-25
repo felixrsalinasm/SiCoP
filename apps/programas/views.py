@@ -19,7 +19,7 @@ class ListaLaboratorios(ListView):
     template_name = 'programas/lista_laboratorios.html'
     context_object_name = 'laboratorios'
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class CrearLaboratorio(CreateView):
     model = Laboratorio
     form_class = FormularioLaboratorio
@@ -32,7 +32,7 @@ class CrearLaboratorio(CreateView):
         registrar_accion(self.request, 'CREAR', 'Laboratorio', f'Crear registro: {self.object}')
         return response
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class EditarLaboratorio(UpdateView):
     model = Laboratorio
     form_class = FormularioLaboratorio
@@ -64,7 +64,7 @@ class DetallePrograma(DetailView):
     template_name = 'programas/detalle_programa.html'
     context_object_name = 'programa'
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class CrearPrograma(CreateView):
     model = Programa
     form_class = FormularioPrograma
@@ -77,7 +77,7 @@ class CrearPrograma(CreateView):
         registrar_accion(self.request, 'CREAR', 'Programa', f'Crear registro: {self.object}')
         return response
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class EditarPrograma(UpdateView):
     model = Programa
     form_class = FormularioPrograma
@@ -100,7 +100,7 @@ class ListaCoordinadores(ListView):
     def get_queryset(self):
         return super().get_queryset().order_by('programa', '-fecha_inicio')
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class AsignarCoordinador(CreateView):
     model = Coordinador
     form_class = FormularioCoordinador
@@ -117,7 +117,7 @@ class AsignarCoordinador(CreateView):
         registrar_accion(self.request, 'CREAR', 'Coordinador', f'Crear registro: {self.object}')
         return response
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(rol_requerido(*ROLES_ADMIN_COORD), name='dispatch')
 class EditarCoordinador(UpdateView):
     model = Coordinador
     form_class = FormularioCoordinador
