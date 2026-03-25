@@ -77,14 +77,6 @@
     </tbody>
 </table>
 
-
-    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-        <a href="?tipo_examen={{ request.GET.tipo_examen|default:'' }}&resultado={{ request.GET.resultado|default:'' }}&page={{ page_obj.next_page_number }}" style="color: #ffffff; text-decoration: none; margin-left: 1rem;">Siguiente &raquo;</a>
-    {% endif %}
-</div>
-{% endif %}
-
 {% if is_paginated %}
 <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
     {% if page_obj.has_previous %}

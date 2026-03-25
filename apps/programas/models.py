@@ -1,10 +1,15 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from apps.personas.models import ModeloBase
+
 
 class Laboratorio(ModeloBase):
     nombre = models.CharField(max_length=100)
     siglas = models.CharField(max_length=20, unique=True)
-    jefe = models.ForeignKey('personas.Profesor', on_delete=models.SET_NULL, null=True, blank=True, related_name='laboratorios_dirigidos')
+    jefe = models.ForeignKey(
+        'personas.Profesor', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='laboratorios_dirigidos'
+    )
 
     class Meta:
         verbose_name = 'laboratorio'
@@ -14,15 +19,24 @@ class Laboratorio(ModeloBase):
     def __str__(self):
         return f'{self.siglas} — {self.nombre}'
 
+
 class Programa(ModeloBase):
     class Nivel(models.TextChoices):
-        MAESTRIA = 'MAESTRIA', 'Maestría'
-        DOCTORADO = 'DOCTORADO', 'Doctorado'
         ESPECIALIDAD = 'ESPECIALIDAD', 'Especialidad'
+        MAESTRIA = 'MAESTRIA', 'Maestria'
+        DOCTORADO = 'DOCTORADO', 'Doctorado'
+        DOCTORADO_DIRECTO = 'DOCTORADO_DIRECTO', 'Doctorado Directo'
+
+    DURACION_MAXIMA = {
+        'MAESTRIA': 30,
+        'DOCTORADO': 48,
+        'DOCTORADO_DIRECTO': 60,
+    }
 
     nombre = models.CharField(max_length=100)
     siglas = models.CharField(max_length=10, unique=True)
-    nivel = models.CharField(max_length=15, choices=Nivel.choices)
+    nivel = models.CharField(max_length=20, choices=Nivel.choices)
+    duracion_maxima_meses = models.PositiveIntegerField(blank=True, null=True)
     url_doc_base = models.URLField(blank=True)
     fecha_creacion = models.DateField(blank=True, null=True)
     activo = models.BooleanField(default=True)
@@ -34,6 +48,19 @@ class Programa(ModeloBase):
 
     def __str__(self):
         return f'{self.siglas} — {self.nombre}'
+
+    def clean(self):
+        tope = self.DURACION_MAXIMA.get(self.nivel)
+        if tope and self.duracion_maxima_meses and self.duracion_maxima_meses > tope:
+            raise ValidationError(
+                f'La duracion maxima para {self.get_nivel_display()} no puede exceder {tope} meses.'
+            )
+
+    def save(self, *args, **kwargs):
+        if not self.duracion_maxima_meses:
+            self.duracion_maxima_meses = self.DURACION_MAXIMA.get(self.nivel)
+        super().save(*args, **kwargs)
+
 
 class Coordinador(ModeloBase):
     profesor = models.ForeignKey('personas.Profesor', on_delete=models.PROTECT, related_name='coordinaciones')

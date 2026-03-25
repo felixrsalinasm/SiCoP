@@ -1,6 +1,6 @@
 <div align="center">
 
-# SiCoP — Sistema de Coordinación de Posgrado
+# Sistema de Coordinación de Posgrado
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django&logoColor=white)
@@ -68,9 +68,3 @@ Accede en: http://127.0.0.1:8000
 | Secretaría | secretaria1 | Secr1234! |
 | Profesor | profesor1 | Prof1234! |
 | Profesor | profesor2 | Prof1234! |
-
-## Pruebas Automatizadas
-
-```
-python manage.py test apps --verbosity=2
-```
