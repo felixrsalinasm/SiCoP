@@ -64,6 +64,7 @@ Accede en: http://127.0.0.1:8000
 
 | Rol | Usuario | Contraseña |
 |---|---|---|
+| Administrador | admin | Admin1234! |
 | Coordinador | coordinador1 | Coord1234! |
 | Secretaría | secretaria1 | Secr1234! |
 | Profesor | profesor1 | Prof1234! |
