@@ -9,15 +9,14 @@ from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from .models import Tesis, DirectorTesis, ComiteTutorial, JuradoExamen
 from .forms import FormularioTesis, FormularioDirectorTesis, FormularioComiteTutorial, FormularioJuradoExamen
-from apps.cuentas.decoradores import rol_requerido
+from apps.cuentas.decoradores import grupo_requerido
 
-ROLES_TODO = ['ADMIN', 'COORDINADOR', 'SECRETARIA']
-ROLES_ESCRITURA = ['ADMIN', 'SECRETARIA']
-ROLES_ADMIN = ['ADMIN']
-ROLES_RESULTADO = ['ADMIN', 'COORDINADOR']
+GRUPOS_LECTURA = ('Administrador', 'Secretaria', 'Profesor')
+GRUPOS_ESCRITURA = ('Administrador', 'Secretaria')
+GRUPOS_ADMIN = ('Administrador',)
 
 
-@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class ListaTesis(ListView):
     model = Tesis
     template_name = 'tesis/lista_tesis.html'
@@ -35,7 +34,7 @@ class ListaTesis(ListView):
         return qs
 
 
-@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class DetalleTesis(DetailView):
     model = Tesis
     template_name = 'tesis/detalle_tesis.html'
@@ -48,7 +47,7 @@ class DetalleTesis(DetailView):
         return context
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class CrearTesis(CreateView):
     model = Tesis
     form_class = FormularioTesis
@@ -62,7 +61,7 @@ class CrearTesis(CreateView):
         return response
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class EditarTesis(UpdateView):
     model = Tesis
     form_class = FormularioTesis
@@ -76,7 +75,7 @@ class EditarTesis(UpdateView):
         return response
 
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class EliminarTesis(DeleteView):
     model = Tesis
     template_name = 'tesis/confirmar_eliminar.html'
@@ -88,7 +87,7 @@ class EliminarTesis(DeleteView):
         return super().form_valid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class ListaDirectoresTesis(ListView):
     model = DirectorTesis
     template_name = 'tesis/lista_directores.html'
@@ -105,7 +104,7 @@ class ListaDirectoresTesis(ListView):
         return qs.order_by('-fecha_asignacion')
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class AsignarDirectorTesis(CreateView):
     model = DirectorTesis
     form_class = FormularioDirectorTesis
@@ -123,7 +122,7 @@ class AsignarDirectorTesis(CreateView):
             return self.form_invalid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class EditarDirectorTesis(UpdateView):
     model = DirectorTesis
     fields = ['tipo_direccion', 'fecha_termino', 'activo']
@@ -137,7 +136,7 @@ class EditarDirectorTesis(UpdateView):
         return response
 
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class EliminarDirectorTesis(DeleteView):
     model = DirectorTesis
     template_name = 'tesis/confirmar_eliminar.html'
@@ -149,7 +148,7 @@ class EliminarDirectorTesis(DeleteView):
         return super().form_valid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class ListaComiteTutorial(ListView):
     model = ComiteTutorial
     template_name = 'tesis/lista_comite.html'
@@ -166,7 +165,7 @@ class ListaComiteTutorial(ListView):
         return qs.order_by('-fecha_asignacion')
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class AsignarComiteTutorial(CreateView):
     model = ComiteTutorial
     form_class = FormularioComiteTutorial
@@ -184,7 +183,7 @@ class AsignarComiteTutorial(CreateView):
             return self.form_invalid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class EditarComiteTutorial(UpdateView):
     model = ComiteTutorial
     fields = ['rol', 'fecha_termino', 'activo']
@@ -198,7 +197,7 @@ class EditarComiteTutorial(UpdateView):
         return response
 
 
-@method_decorator(rol_requerido(*ROLES_ADMIN), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class EliminarComiteTutorial(DeleteView):
     model = ComiteTutorial
     template_name = 'tesis/confirmar_eliminar.html'
@@ -210,7 +209,7 @@ class EliminarComiteTutorial(DeleteView):
         return super().form_valid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_TODO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class ListaJuradoExamen(ListView):
     model = JuradoExamen
     template_name = 'tesis/lista_jurado.html'
@@ -228,7 +227,7 @@ class ListaJuradoExamen(ListView):
         return qs.order_by('-fecha_examen', 'estudiante')
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class AsignarJuradoExamen(CreateView):
     model = JuradoExamen
     form_class = FormularioJuradoExamen
@@ -246,7 +245,7 @@ class AsignarJuradoExamen(CreateView):
             return self.form_invalid(form)
 
 
-@method_decorator(rol_requerido(*ROLES_ESCRITURA), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ESCRITURA), name='dispatch')
 class EditarJuradoExamen(UpdateView):
     model = JuradoExamen
     fields = ['rol', 'fecha_examen', 'resultado']
@@ -260,7 +259,7 @@ class EditarJuradoExamen(UpdateView):
         return response
 
 
-@method_decorator(rol_requerido(*ROLES_RESULTADO), name='dispatch')
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class RegistrarResultadoExamen(View):
     def get(self, request, pk):
         jurado_ref = get_object_or_404(JuradoExamen, pk=pk)

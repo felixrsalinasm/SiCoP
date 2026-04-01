@@ -7,49 +7,88 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from apps.cuentas.models import Usuario
 from apps.personas.models import Persona, Profesor, Estudiante
 from apps.programas.models import Programa, Laboratorio
 from apps.nombramientos.models import Nombramiento, CatTipoNombramiento
-from apps.tesis.models import Tesis, DirectorTesis, ComiteTutorial
+from apps.tesis.models import Tesis, DirectorTesis, ComiteTutorial, JuradoExamen
 from apps.historial.models import Registro
+
+
+def obtener_permisos(modelos, acciones):
+    permisos = []
+    for modelo in modelos:
+        ct = ContentType.objects.get_for_model(modelo)
+        for accion in acciones:
+            codename = f'{accion}_{ct.model}'
+            perm = Permission.objects.filter(content_type=ct, codename=codename).first()
+            if perm:
+                permisos.append(perm)
+    return permisos
+
+
+def crear_grupos():
+    print('  Creando grupos de permisos...')
+
+    todos_los_modelos = [
+        Persona, Profesor, Estudiante, Programa, Laboratorio,
+        CatTipoNombramiento, Nombramiento, Tesis, DirectorTesis,
+        ComiteTutorial, JuradoExamen, Registro
+    ]
+
+    grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
+    grupo_admin.permissions.set(
+        obtener_permisos(todos_los_modelos, ['add', 'change', 'delete', 'view'])
+    )
+
+    modelos_secretaria = [Persona, Profesor, Estudiante, Tesis, Nombramiento]
+    grupo_sec, _ = Group.objects.get_or_create(name='Secretaria')
+    grupo_sec.permissions.set(
+        obtener_permisos(modelos_secretaria, ['add', 'change', 'view'])
+    )
+
+    modelos_profesor = [Tesis, ComiteTutorial, Profesor]
+    grupo_prof, _ = Group.objects.get_or_create(name='Profesor')
+    grupo_prof.permissions.set(
+        obtener_permisos(modelos_profesor, ['view'])
+    )
 
 
 def crear_datos_prueba():
     print('Iniciando carga de datos de prueba...')
 
-    user_admin, created = Usuario.objects.get_or_create(
+    crear_grupos()
+
+    grupo_admin = Group.objects.get(name='Administrador')
+    grupo_sec = Group.objects.get(name='Secretaria')
+    grupo_prof = Group.objects.get(name='Profesor')
+
+    user_super, created = Usuario.objects.get_or_create(
         username='admin',
         defaults={'rol': Usuario.Roles.ADMIN, 'is_staff': True, 'is_superuser': True}
     )
     if created:
-        user_admin.set_password('Admin1234!')
-        user_admin.save()
-        print('  Usuario admin')
+        user_super.set_password('Admin1234!')
+        user_super.save()
+        print('  Superusuario admin')
     else:
-        if user_admin.rol != 'ADMIN':
-            user_admin.rol = 'ADMIN'
-            user_admin.save()
+        if user_super.rol != 'ADMIN':
+            user_super.rol = 'ADMIN'
+            user_super.is_staff = True
+            user_super.is_superuser = True
+            user_super.save()
 
-
-
-    user_coord, created = Usuario.objects.get_or_create(
-        username='coordinador1',
-        defaults={'rol': Usuario.Roles.COORDINADOR}
+    user_adm, created = Usuario.objects.get_or_create(
+        username='administrador1',
+        defaults={'rol': Usuario.Roles.ADMIN}
     )
     if created:
-        user_coord.set_password('Coord1234!')
-        user_coord.save()
-        print('  Usuario coordinador1')
-
-    persona_coord, _ = Persona.objects.get_or_create(
-        email='cmendoza@cic.ipn.mx',
-        defaults={
-            'usuario': user_coord, 'paterno': 'Mendoza', 'materno': 'Reyes',
-            'nombres': 'Carlos', 'rfc': 'MERC800101XYZ', 'curp': 'MERC800101HDFSXYZ1',
-            'genero': 'M'
-        }
-    )
+        user_adm.set_password('Adm1n1234!')
+        user_adm.save()
+        print('  Usuario administrador1')
+    user_adm.groups.add(grupo_admin)
 
     user_sec, created = Usuario.objects.get_or_create(
         username='secretaria1',
@@ -59,15 +98,7 @@ def crear_datos_prueba():
         user_sec.set_password('Secr1234!')
         user_sec.save()
         print('  Usuario secretaria1')
-
-    Persona.objects.get_or_create(
-        email='atorres@cic.ipn.mx',
-        defaults={
-            'usuario': user_sec, 'paterno': 'Torres', 'materno': 'Vega',
-            'nombres': 'Ana', 'rfc': 'TOVA800201XYZ', 'curp': 'TOVA800201MDFSXYZ1',
-            'genero': 'F'
-        }
-    )
+    user_sec.groups.add(grupo_sec)
 
     user_p1, created = Usuario.objects.get_or_create(
         username='profesor1', defaults={'rol': Usuario.Roles.PROFESOR}
@@ -75,22 +106,7 @@ def crear_datos_prueba():
     if created:
         user_p1.set_password('Prof1234!')
         user_p1.save()
-
-    persona_p1, _ = Persona.objects.get_or_create(
-        email='lramirez@cic.ipn.mx',
-        defaults={
-            'usuario': user_p1, 'paterno': 'Ramirez', 'materno': 'Castro',
-            'nombres': 'Luis', 'rfc': 'RACL700301XYZ', 'curp': 'RACL700301HDFSXYZ1',
-            'genero': 'M'
-        }
-    )
-
-    lab_lia, _ = Laboratorio.objects.get_or_create(siglas='LIA', defaults={'nombre': 'Laboratorio de Inteligencia Artificial'})
-    profesor1, _ = Profesor.objects.get_or_create(
-        persona=persona_p1,
-        defaults={'grado_academico': 'DOCTORADO', 'laboratorio': lab_lia, 'activo': True,
-                  'numero_empleado': 'EMP001', 'departamento': 'Ciencias de la Computacion'}
-    )
+    user_p1.groups.add(grupo_prof)
 
     user_p2, created = Usuario.objects.get_or_create(
         username='profesor2', defaults={'rol': Usuario.Roles.PROFESOR}
@@ -98,195 +114,274 @@ def crear_datos_prueba():
     if created:
         user_p2.set_password('Prof1234!')
         user_p2.save()
+    user_p2.groups.add(grupo_prof)
 
-    persona_p2, _ = Persona.objects.get_or_create(
-        email='mgutierrez@cic.ipn.mx',
+    print('  Laboratorios...')
+    lab_lia, _ = Laboratorio.objects.get_or_create(siglas='LIA', defaults={'nombre': 'Laboratorio de Inteligencia Artificial'})
+    lab_lci, _ = Laboratorio.objects.get_or_create(siglas='LCI', defaults={'nombre': 'Laboratorio de Computo Inteligente'})
+
+    print('  Personas y profesores...')
+    datos_profesores = [
+        {
+            'nombres': 'Juan Carlos', 'paterno': 'Reyes', 'materno': 'Morales',
+            'email': 'jcreyes@cic.ipn.mx', 'genero': 'M', 'num_emp': '10234',
+            'usuario': user_p1, 'lab': lab_lia
+        },
+        {
+            'nombres': 'Maria Elena', 'paterno': 'Vazquez', 'materno': 'Torres',
+            'email': 'mevazquez@cic.ipn.mx', 'genero': 'F', 'num_emp': '10235',
+            'usuario': user_p2, 'lab': lab_lia
+        },
+        {
+            'nombres': 'Roberto', 'paterno': 'Sanchez', 'materno': 'Avila',
+            'email': 'rsanchez@cic.ipn.mx', 'genero': 'M', 'num_emp': '10236',
+            'usuario': None, 'lab': lab_lci
+        },
+        {
+            'nombres': 'Adriana', 'paterno': 'Lopez', 'materno': 'Fuentes',
+            'email': 'alopez@cic.ipn.mx', 'genero': 'F', 'num_emp': '10237',
+            'usuario': None, 'lab': lab_lci
+        },
+        {
+            'nombres': 'Miguel Angel', 'paterno': 'Hernandez', 'materno': 'Cruz',
+            'email': 'mahernandez@cic.ipn.mx', 'genero': 'M', 'num_emp': '10238',
+            'usuario': None, 'lab': lab_lia
+        },
+        {
+            'nombres': 'Laura Patricia', 'paterno': 'Gomez', 'materno': 'Rios',
+            'email': 'lpgomez@cic.ipn.mx', 'genero': 'F', 'num_emp': '10239',
+            'usuario': None, 'lab': lab_lci
+        },
+    ]
+
+    profesores = []
+    for dp in datos_profesores:
+        persona, _ = Persona.objects.get_or_create(
+            email=dp['email'],
+            defaults={
+                'nombres': dp['nombres'], 'paterno': dp['paterno'], 'materno': dp['materno'],
+                'genero': dp['genero'], 'usuario': dp['usuario']
+            }
+        )
+        prof, _ = Profesor.objects.get_or_create(
+            persona=persona,
+            defaults={
+                'grado_academico': 'DOCTORADO', 'laboratorio': dp['lab'],
+                'activo': True, 'numero_empleado': dp['num_emp'],
+                'departamento': 'Ciencias de la Computacion'
+            }
+        )
+        profesores.append(prof)
+
+    reyes, vazquez, sanchez, lopez, hernandez, gomez = profesores
+
+    persona_adm, _ = Persona.objects.get_or_create(
+        email='administrador@cic.ipn.mx',
         defaults={
-            'usuario': user_p2, 'paterno': 'Gutierrez', 'materno': 'Lopez',
-            'nombres': 'Maria', 'rfc': 'GULM700401XYZ', 'curp': 'GULM700401MDFSXYZ1',
-            'genero': 'F'
+            'nombres': 'Administrador', 'paterno': 'Sistema', 'materno': 'CIC',
+            'genero': 'NE', 'usuario': user_adm
+        }
+    )
+    persona_sec, _ = Persona.objects.get_or_create(
+        email='secretaria@cic.ipn.mx',
+        defaults={
+            'nombres': 'Ana', 'paterno': 'Torres', 'materno': 'Vega',
+            'genero': 'F', 'usuario': user_sec
         }
     )
 
-    lab_lci, _ = Laboratorio.objects.get_or_create(siglas='LCI', defaults={'nombre': 'Laboratorio de Computacion Inteligente'})
-    profesor2, _ = Profesor.objects.get_or_create(
-        persona=persona_p2,
-        defaults={'grado_academico': 'DOCTORADO', 'laboratorio': lab_lci, 'activo': True,
-                  'numero_empleado': 'EMP002', 'departamento': 'Ciencias de la Computacion'}
-    )
-
-    user_p3, created = Usuario.objects.get_or_create(
-        username='profesor3', defaults={'rol': Usuario.Roles.PROFESOR}
-    )
-    if created:
-        user_p3.set_password('Prof1234!')
-        user_p3.save()
-
-    persona_p3, _ = Persona.objects.get_or_create(
-        email='jherrera@cic.ipn.mx',
-        defaults={
-            'usuario': user_p3, 'paterno': 'Herrera', 'materno': 'Solis',
-            'nombres': 'Jorge', 'rfc': 'HESJ750501XYZ', 'curp': 'HESJ750501HDFSXYZ1',
-            'genero': 'M'
-        }
-    )
-
-    profesor3, _ = Profesor.objects.get_or_create(
-        persona=persona_p3,
-        defaults={'grado_academico': 'DOCTORADO', 'laboratorio': lab_lia, 'activo': True,
-                  'numero_empleado': 'EMP003', 'departamento': 'Sistemas Computacionales'}
-    )
-
+    print('  Programas...')
     prog_mcc, _ = Programa.objects.get_or_create(
         siglas='MCC',
-        defaults={'nombre': 'Maestria en Ciencias de la Computacion', 'nivel': 'MAESTRIA', 'duracion_maxima_meses': 30}
+        defaults={
+            'nombre': 'Maestria en Ciencias en Computacion',
+            'nivel': 'MAESTRIA', 'duracion_maxima_meses': 30, 'activo': True
+        }
     )
     prog_dcc, _ = Programa.objects.get_or_create(
         siglas='DCC',
-        defaults={'nombre': 'Doctorado en Ciencias de la Computacion', 'nivel': 'DOCTORADO', 'duracion_maxima_meses': 48}
-    )
-
-    user_e1, _ = Usuario.objects.get_or_create(username='jcperez', defaults={'rol': Usuario.Roles.SECRETARIA})
-    persona_e1, _ = Persona.objects.get_or_create(
-        email='jcperez@alumno.ipn.mx',
         defaults={
-            'usuario': user_e1, 'paterno': 'Perez', 'materno': 'Morales',
-            'nombres': 'Juan Carlos', 'rfc': 'PEMJ900101XYZ', 'curp': 'PEMJ900101HDFSXYZ1',
-            'genero': 'M'
+            'nombre': 'Doctorado en Ciencias en Computacion',
+            'nivel': 'DOCTORADO', 'duracion_maxima_meses': 48, 'activo': True
         }
     )
-    estudiante1, _ = Estudiante.objects.get_or_create(
-        matricula='A230001',
+    prog_ddcc, _ = Programa.objects.get_or_create(
+        siglas='DDCC',
         defaults={
-            'persona': persona_e1, 'programa': prog_mcc, 'generacion': 2023,
-            'modalidad': 'TC', 'estado': 'ACTIVO', 'fecha_ingreso': '2023-08-01'
+            'nombre': 'Doctorado Directo en Ciencias en Computacion',
+            'nivel': 'DOCTORADO_DIRECTO', 'duracion_maxima_meses': 60, 'activo': True
         }
     )
 
-    user_e2, _ = Usuario.objects.get_or_create(username='sevargas', defaults={'rol': Usuario.Roles.SECRETARIA})
-    persona_e2, _ = Persona.objects.get_or_create(
-        email='sevargas@alumno.ipn.mx',
-        defaults={
-            'usuario': user_e2, 'paterno': 'Vargas', 'materno': 'Nunez',
-            'nombres': 'Sofia Elena', 'rfc': 'VANS900201XYZ', 'curp': 'VANS900201MDFSXYZ1',
-            'genero': 'F'
-        }
-    )
-    estudiante2, _ = Estudiante.objects.get_or_create(
-        matricula='A230002',
-        defaults={
-            'persona': persona_e2, 'programa': prog_dcc, 'generacion': 2023,
-            'modalidad': 'TC', 'estado': 'ACTIVO', 'fecha_ingreso': '2023-08-01'
-        }
-    )
-
-    print('  Tipos de nombramiento IPN...')
+    print('  Tipos de nombramiento...')
     tipos_nombramiento = [
-        ('Profesor de Posgrado Colegiado', 'IPN', 'Nombramiento para impartir cursos en programas de posgrado del IPN.'),
-        ('Director de Tesis', 'IPN', 'Nombramiento formal para dirigir trabajos de tesis de posgrado.'),
-        ('Coordinador de Programa', 'IPN', 'Responsable de la coordinacion academica de un programa de posgrado.'),
-        ('Investigador Nacional', 'CONAHCYT', 'Distincion del Sistema Nacional de Investigadores del CONAHCyT.'),
-        ('Investigador Nacional Emerito', 'CONAHCYT', 'Maximo nivel del Sistema Nacional de Investigadores.'),
-        ('Profesor Invitado', 'EXTERNO', 'Profesor de otra institucion que participa en actividades de posgrado.'),
-        ('Miembro de Comite Tutorial', 'IPN', 'Nombramiento para integrar comites tutoriales de posgrado.'),
+        ('Profesor de Posgrado Colegiado', 'IPN'),
+        ('Director de Tesis', 'IPN'),
+        ('Codirector de Tesis', 'IPN'),
+        ('Coordinador de Programa de Posgrado', 'IPN'),
+        ('Miembro de Comite Tutorial', 'IPN'),
+        ('Sinodal de Examen de Grado', 'IPN'),
+        ('Profesor Visitante', 'EXTERNO'),
     ]
-    for nombre, origen, desc in tipos_nombramiento:
+    for nombre, origen in tipos_nombramiento:
         CatTipoNombramiento.objects.get_or_create(
-            nombramiento=nombre,
-            defaults={'origen': origen, 'descripcion': desc}
+            nombramiento=nombre, defaults={'origen': origen}
         )
 
-    tipo_director, _ = CatTipoNombramiento.objects.get_or_create(
-        nombramiento='Director de Tesis', defaults={'origen': 'IPN'}
-    )
-    tipo_sni, _ = CatTipoNombramiento.objects.get_or_create(
-        nombramiento='Investigador Nacional', defaults={'origen': 'CONAHCYT'}
-    )
+    tipo_ppc = CatTipoNombramiento.objects.get(nombramiento='Profesor de Posgrado Colegiado')
 
-    nomb1, _ = Nombramiento.objects.get_or_create(
-        clave='DIR-2024-001',
-        defaults={
-            'profesor': profesor1, 'tipo': tipo_director,
-            'fecha_inicio': '2024-01-01', 'fecha_fin': '2026-12-31',
-            'fecha_emision': '2024-01-01', 'fecha_vencimiento': '2026-12-31'
-        }
-    )
-    nomb2, _ = Nombramiento.objects.get_or_create(
-        clave='SNI-2024-001',
-        defaults={
-            'profesor': profesor1, 'tipo': tipo_sni,
-            'fecha_inicio': '2024-01-01', 'fecha_fin': '2027-12-31',
-            'fecha_emision': '2024-01-01', 'fecha_vencimiento': '2027-12-31'
-        }
-    )
-    Nombramiento.objects.get_or_create(
-        clave='DIR-2024-002',
-        defaults={
-            'profesor': profesor2, 'tipo': tipo_director,
-            'fecha_inicio': '2024-01-01', 'fecha_fin': '2026-12-31',
-            'fecha_emision': '2024-01-01', 'fecha_vencimiento': '2026-12-31'
-        }
-    )
+    print('  Nombramientos vigentes...')
+    for prof in profesores:
+        Nombramiento.objects.get_or_create(
+            profesor=prof, tipo=tipo_ppc,
+            defaults={
+                'clave': f'PPC-{prof.numero_empleado}',
+                'fecha_inicio': '2024-01-01',
+                'fecha_emision': '2024-01-01',
+            }
+        )
+
+    print('  Alumnos...')
+    datos_alumnos = [
+        {
+            'nombres': 'Carlos Alberto', 'paterno': 'Mendoza', 'materno': 'Perez',
+            'email': 'camendoza@alumno.ipn.mx', 'genero': 'M',
+            'matricula': 'A200100001', 'programa': prog_mcc,
+            'generacion': 2023, 'fecha_ingreso': '2023-08-01'
+        },
+        {
+            'nombres': 'Diana', 'paterno': 'Flores', 'materno': 'Castillo',
+            'email': 'dflores@alumno.ipn.mx', 'genero': 'F',
+            'matricula': 'A200100002', 'programa': prog_dcc,
+            'generacion': 2022, 'fecha_ingreso': '2022-08-01'
+        },
+        {
+            'nombres': 'Fernando', 'paterno': 'Rojas', 'materno': 'Jimenez',
+            'email': 'frojas@alumno.ipn.mx', 'genero': 'M',
+            'matricula': 'A200100003', 'programa': prog_ddcc,
+            'generacion': 2021, 'fecha_ingreso': '2021-08-01'
+        },
+        {
+            'nombres': 'Sofia', 'paterno': 'Guerrero', 'materno': 'Medina',
+            'email': 'sguerrero@alumno.ipn.mx', 'genero': 'F',
+            'matricula': 'A200100004', 'programa': prog_mcc,
+            'generacion': 2024, 'fecha_ingreso': '2024-02-01'
+        },
+    ]
+
+    estudiantes = []
+    for da in datos_alumnos:
+        persona, _ = Persona.objects.get_or_create(
+            email=da['email'],
+            defaults={
+                'nombres': da['nombres'], 'paterno': da['paterno'], 'materno': da['materno'],
+                'genero': da['genero']
+            }
+        )
+        est, _ = Estudiante.objects.get_or_create(
+            matricula=da['matricula'],
+            defaults={
+                'persona': persona, 'programa': da['programa'],
+                'generacion': da['generacion'], 'modalidad': 'TC',
+                'estado': 'ACTIVO', 'fecha_ingreso': da['fecha_ingreso']
+            }
+        )
+        estudiantes.append(est)
+
+    carlos, diana, fernando, sofia = estudiantes
 
     print('  Tesis...')
     tesis1, _ = Tesis.objects.get_or_create(
-        titulo='Optimizacion de algoritmos de aprendizaje profundo para deteccion de objetos en tiempo real',
+        titulo='Modelo de deteccion de anomalias en redes usando aprendizaje profundo',
         defaults={
-            'resumen': 'Investigacion sobre tecnicas de optimizacion aplicadas a redes neuronales convolucionales.',
-            'estado': 'EN_PROCESO', 'fecha_registro': '2024-02-15',
-            'alumno': estudiante1, 'programa': prog_mcc
+            'estado': 'EN_PROCESO', 'fecha_registro': '2023-09-01',
+            'alumno': carlos, 'programa': prog_mcc
         }
     )
     tesis2, _ = Tesis.objects.get_or_create(
-        titulo='Modelos de lenguaje natural para el analisis semantico de textos cientificos en espanol',
+        titulo='Optimizacion de algoritmos evolutivos para problemas de ruteo',
         defaults={
-            'resumen': 'Desarrollo de modelos NLP especializados en corpus cientifico hispanohablante.',
-            'estado': 'EN_PROCESO', 'fecha_registro': '2024-03-01',
-            'alumno': estudiante2, 'programa': prog_dcc
+            'estado': 'EN_PROCESO', 'fecha_registro': '2022-09-01',
+            'alumno': diana, 'programa': prog_dcc
+        }
+    )
+    tesis3, _ = Tesis.objects.get_or_create(
+        titulo='Sistemas de razonamiento automatico basados en logica difusa',
+        defaults={
+            'estado': 'CONCLUIDA', 'fecha_registro': '2021-09-01',
+            'alumno': fernando, 'programa': prog_ddcc
         }
     )
 
-    print('  Directores y comites...')
+    print('  Directores de tesis...')
     DirectorTesis.objects.get_or_create(
-        tesis=tesis1, profesor=profesor1,
-        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2024-02-15'}
+        tesis=tesis1, profesor=reyes,
+        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2023-09-01'}
     )
     DirectorTesis.objects.get_or_create(
-        tesis=tesis2, profesor=profesor2,
-        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2024-03-01'}
+        tesis=tesis2, profesor=vazquez,
+        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2022-09-01'}
     )
     DirectorTesis.objects.get_or_create(
-        tesis=tesis2, profesor=profesor1,
-        defaults={'tipo_direccion': 'CODIRECTOR', 'fecha_asignacion': '2024-03-15'}
+        tesis=tesis2, profesor=sanchez,
+        defaults={'tipo_direccion': 'CODIRECTOR', 'fecha_asignacion': '2022-09-15'}
+    )
+    DirectorTesis.objects.get_or_create(
+        tesis=tesis3, profesor=sanchez,
+        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2021-09-01'}
+    )
+
+    print('  Comites tutoriales...')
+    ComiteTutorial.objects.get_or_create(
+        tesis=tesis1, profesor=reyes,
+        defaults={'rol': 'Director', 'fecha_asignacion': '2023-09-01'}
+    )
+    ComiteTutorial.objects.get_or_create(
+        tesis=tesis1, profesor=vazquez,
+        defaults={'rol': 'Vocal', 'fecha_asignacion': '2023-09-15'}
+    )
+    ComiteTutorial.objects.get_or_create(
+        tesis=tesis1, profesor=sanchez,
+        defaults={'rol': 'Vocal', 'fecha_asignacion': '2023-09-15'}
     )
 
     ComiteTutorial.objects.get_or_create(
-        tesis=tesis1, profesor=profesor1,
-        defaults={'rol': 'Director', 'fecha_asignacion': '2024-02-15'}
+        tesis=tesis2, profesor=vazquez,
+        defaults={'rol': 'Directora', 'fecha_asignacion': '2022-09-01'}
     )
     ComiteTutorial.objects.get_or_create(
-        tesis=tesis1, profesor=profesor2,
-        defaults={'rol': 'Investigador', 'fecha_asignacion': '2024-02-20'}
+        tesis=tesis2, profesor=reyes,
+        defaults={'rol': 'Vocal', 'fecha_asignacion': '2022-09-15'}
     )
     ComiteTutorial.objects.get_or_create(
-        tesis=tesis1, profesor=profesor3,
-        defaults={'rol': 'Investigador', 'fecha_asignacion': '2024-02-20'}
+        tesis=tesis2, profesor=lopez,
+        defaults={'rol': 'Vocal', 'fecha_asignacion': '2022-09-15'}
     )
+    ComiteTutorial.objects.get_or_create(
+        tesis=tesis2, profesor=hernandez,
+        defaults={'rol': 'Vocal', 'fecha_asignacion': '2022-09-15'}
+    )
+
+    print('  Jurado de examen...')
+    jurado_data = [
+        (fernando, reyes, 'PRESIDENTE'),
+        (fernando, vazquez, 'SECRETARIO'),
+        (fernando, lopez, 'VOCAL'),
+        (fernando, hernandez, 'VOCAL'),
+        (fernando, sanchez, 'VOCAL'),
+        (fernando, gomez, 'SUPLENTE'),
+    ]
+    for alumno, prof, rol_jurado in jurado_data:
+        JuradoExamen.objects.get_or_create(
+            estudiante=alumno, profesor=prof, tipo_examen='GRADO',
+            defaults={'rol': rol_jurado, 'fecha_examen': '2025-06-15', 'resultado': 'APROBADO'}
+        )
 
     if Registro.objects.count() == 0:
         Registro.objects.create(
-            usuario=user_sec, accion='CREAR', modulo='Tesis',
-            descripcion='Crear registro: Optimizacion de algoritmos de aprendizaje profundo...', ip='127.0.0.1'
+            usuario=user_adm, accion='CREAR', modulo='Tesis',
+            descripcion='Registrar tesis: Modelo de deteccion de anomalias', ip='127.0.0.1'
         )
-        Registro.objects.create(
-            usuario=user_coord, accion='CREAR', modulo='DirectorTesis',
-            descripcion='Asignar: Ramirez Castro, Luis como director', ip='127.0.0.1'
-        )
-        Registro.objects.create(
-            usuario=user_sec, accion='CREAR', modulo='Nombramiento',
-            descripcion='Crear nombramiento: DIR-2024-001', ip='127.0.0.1'
-        )
-        print('  Historial de ejemplo')
 
     print('Datos de prueba cargados correctamente.')
 

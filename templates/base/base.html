@@ -81,6 +81,20 @@
             padding: 2rem;
             overflow-y: auto;
         }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+        .messages li {
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        .messages .success { background-color: #1b5e20; }
+        .messages .info { background-color: #0d47a1; }
+        .messages .warning { background-color: #e65100; }
+        .messages .error { background-color: #b71c1c; }
     </style>
 </head>
 <body>
@@ -101,7 +115,7 @@
         <aside class="sidebar">
             <a href="{% url 'cuentas:dashboard' %}" style="font-weight: bold; color: #fff; background-color: #0f3460;">Dashboard</a>
 
-            {% if user.es_admin or user.es_coordinador %}
+            {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
@@ -125,7 +139,7 @@
                 <h4>Sistema</h4>
                 <a href="{% url 'historial:historial_lista' %}">Historial de Cambios</a>
 
-            {% elif user.es_secretaria %}
+            {% elif user.groups.all.0.name == 'Secretaria' %}
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
@@ -136,11 +150,11 @@
 
                 <h4>Tesis</h4>
                 <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
-                <a href="{% url 'tesis:lista_directores' %}">Directores</a>
-                <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>
 
-            {% elif user.es_profesor %}
-                <h4>Personal</h4>
+            {% elif user.groups.all.0.name == 'Profesor' %}
+                <h4>Consulta</h4>
+                <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
+                <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>
                 {% if user.persona and user.persona.profesor %}
                 <a href="{% url 'personas:detalle_profesor' user.persona.profesor.pk %}">Mi Perfil</a>
                 {% endif %}
@@ -149,6 +163,13 @@
         {% endif %}
 
         <main class="container">
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
             {% block contenido %}{% endblock %}
         </main>
     </div>

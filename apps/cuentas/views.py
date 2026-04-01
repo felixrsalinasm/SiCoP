@@ -15,8 +15,6 @@ class VistaLogin(LoginView):
 
     def get_success_url(self):
         usuario = self.request.user
-        if usuario.es_admin():
-            return '/admin/'
         if usuario.es_profesor():
             if hasattr(usuario, 'persona') and hasattr(usuario.persona, 'profesor'):
                 return f'/personas/profesores/{usuario.persona.profesor.pk}/'
@@ -49,7 +47,13 @@ class VistaDashboard(LoginRequiredMixin, TemplateView):
             estudiantes_activos=Count('estudiantes', filter=Q(estudiantes__estado='ACTIVO'))
         ).filter(activo=True)
 
-        context['total_nombramientos_vigentes'] = Nombramiento.objects.filter(fecha_vencimiento__gte=timezone.now().date()).count()
+        context['total_nombramientos_vigentes'] = Nombramiento.objects.filter(
+            Q(fecha_fin__isnull=True) | Q(fecha_fin__gte=timezone.now().date())
+        ).count()
         context['total_directores_activos'] = DirectorTesis.objects.filter(activo=True).count()
+
+        context['es_admin'] = usuario.groups.filter(name='Administrador').exists() or usuario.is_superuser
+        context['es_secretaria'] = usuario.groups.filter(name='Secretaria').exists()
+        context['es_profesor'] = usuario.groups.filter(name='Profesor').exists()
 
         return context
