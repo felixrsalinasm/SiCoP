@@ -3,10 +3,20 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.shortcuts import render
 
 admin.site.site_header = settings.ADMIN_SITE_HEADER
 admin.site.site_title = settings.ADMIN_SITE_TITLE
 admin.site.index_title = settings.ADMIN_INDEX_TITLE
+
+
+def vista_404(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def vista_403(request, exception):
+    return render(request, '403.html', status=403)
+
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/dashboard/', permanent=False), name='root'),
@@ -18,6 +28,9 @@ urlpatterns = [
     path('tesis/', include('apps.tesis.urls')),
     path('historial/', include('apps.historial.urls')),
 ]
+
+handler404 = vista_404
+handler403 = vista_403
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
