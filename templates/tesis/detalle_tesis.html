@@ -4,7 +4,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Detalle de Tesis</h1>
     <div>
-        {% if user.es_admin or user.es_secretaria %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
         <a href="{% url 'tesis:editar_tesis' tesis.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e; margin-right: 0.5rem;">Editar</a>
         {% endif %}
         <a href="{% url 'tesis:lista_tesis' %}" class="btn">Volver a lista</a>

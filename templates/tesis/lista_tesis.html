@@ -3,7 +3,7 @@
 {% block contenido %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Lista de Tesis</h1>
-    {% if user.es_admin or user.es_secretaria %}
+    {% if es_grupo_admin or es_grupo_secretaria %}
         <a href="{% url 'tesis:crear_tesis' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nueva tesis</a>
     {% endif %}
 </div>
@@ -63,10 +63,10 @@
             <td style="padding: 1rem;">{{ t.fecha_registro }}</td>
             <td style="padding: 1rem; text-align: center;">
                 <a href="{% url 'tesis:detalle_tesis' t.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
-                {% if user.es_admin or user.es_secretaria %}
+                {% if es_grupo_admin or es_grupo_secretaria %}
                 <a href="{% url 'tesis:editar_tesis' t.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
                 {% endif %}
-                {% if user.es_admin %}
+                {% if es_grupo_admin %}
                 <a href="{% url 'tesis:eliminar_tesis' t.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}
             </td>

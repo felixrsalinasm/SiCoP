@@ -4,10 +4,10 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Lista de Estudiantes</h1>
     <div>
-        {% if user.es_admin or user.es_secretaria or user.es_coordinador %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
             <a href="{% url 'personas:exportar_estudiantes_csv' %}" class="btn" style="background-color: #2e7d32; margin-right: 0.5rem;">Exportar CSV</a>
         {% endif %}
-        {% if user.es_admin or user.es_secretaria %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
             <a href="{% url 'personas:crear_estudiante' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo estudiante</a>
         {% endif %}
     </div>
@@ -69,8 +69,11 @@
             </td>
             <td style="padding: 1rem; text-align: center;">
                 <a href="{% url 'personas:detalle_estudiante' est.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
-                {% if user.es_admin or user.es_secretaria %}
-                <a href="{% url 'personas:editar_estudiante' est.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% if es_grupo_admin or es_grupo_secretaria %}
+                <a href="{% url 'personas:editar_estudiante' est.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                {% endif %}
+                {% if es_grupo_admin %}
+                <a href="{% url 'personas:eliminar_estudiante' est.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}
             </td>
         </tr>

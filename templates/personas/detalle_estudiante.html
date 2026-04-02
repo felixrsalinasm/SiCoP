@@ -4,7 +4,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Ficha de Estudiante</h1>
     <div>
-        {% if user.es_admin or user.es_secretaria %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
         <a href="{% url 'personas:editar_estudiante' estudiante.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
         {% endif %}
         <a href="{% url 'personas:lista_estudiantes' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>

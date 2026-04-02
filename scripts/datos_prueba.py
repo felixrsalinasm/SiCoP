@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from apps.cuentas.models import Usuario
 from apps.personas.models import Persona, Profesor, Estudiante
-from apps.programas.models import Programa, Laboratorio
+from apps.programas.models import Programa, Laboratorio, Coordinador
 from apps.nombramientos.models import Nombramiento, CatTipoNombramiento
 from apps.tesis.models import Tesis, DirectorTesis, ComiteTutorial, JuradoExamen
 from apps.historial.models import Registro
@@ -33,7 +33,7 @@ def crear_grupos():
     print('  Creando grupos de permisos...')
 
     todos_los_modelos = [
-        Persona, Profesor, Estudiante, Programa, Laboratorio,
+        Persona, Profesor, Estudiante, Programa, Laboratorio, Coordinador,
         CatTipoNombramiento, Nombramiento, Tesis, DirectorTesis,
         ComiteTutorial, JuradoExamen, Registro
     ]
@@ -73,12 +73,6 @@ def crear_datos_prueba():
         user_super.set_password('Admin1234!')
         user_super.save()
         print('  Superusuario admin')
-    else:
-        if user_super.rol != 'ADMIN':
-            user_super.rol = 'ADMIN'
-            user_super.is_staff = True
-            user_super.is_superuser = True
-            user_super.save()
 
     user_adm, created = Usuario.objects.get_or_create(
         username='administrador1',
@@ -117,8 +111,12 @@ def crear_datos_prueba():
     user_p2.groups.add(grupo_prof)
 
     print('  Laboratorios...')
-    lab_lia, _ = Laboratorio.objects.get_or_create(siglas='LIA', defaults={'nombre': 'Laboratorio de Inteligencia Artificial'})
-    lab_lci, _ = Laboratorio.objects.get_or_create(siglas='LCI', defaults={'nombre': 'Laboratorio de Computo Inteligente'})
+    lab_lia, _ = Laboratorio.objects.get_or_create(
+        siglas='LIA', defaults={'nombre': 'Laboratorio de Inteligencia Artificial'}
+    )
+    lab_lci, _ = Laboratorio.objects.get_or_create(
+        siglas='LCI', defaults={'nombre': 'Laboratorio de Computo Inteligente'}
+    )
 
     print('  Personas y profesores...')
     datos_profesores = [
@@ -213,9 +211,15 @@ def crear_datos_prueba():
         }
     )
 
+    print('  Coordinadores...')
+    Coordinador.objects.get_or_create(
+        profesor=reyes, programa=prog_mcc,
+        defaults={'fecha_inicio': '2023-01-01'}
+    )
+
     print('  Tipos de nombramiento...')
     tipos_nombramiento = [
-        ('Profesor de Posgrado Colegiado', 'IPN'),
+        ('Profesor de Posgrado', 'IPN'),
         ('Director de Tesis', 'IPN'),
         ('Codirector de Tesis', 'IPN'),
         ('Coordinador de Programa de Posgrado', 'IPN'),
@@ -228,12 +232,12 @@ def crear_datos_prueba():
             nombramiento=nombre, defaults={'origen': origen}
         )
 
-    tipo_ppc = CatTipoNombramiento.objects.get(nombramiento='Profesor de Posgrado Colegiado')
+    tipo_pp = CatTipoNombramiento.objects.get(nombramiento='Profesor de Posgrado')
 
     print('  Nombramientos vigentes...')
     for prof in profesores:
         Nombramiento.objects.get_or_create(
-            profesor=prof, tipo=tipo_ppc,
+            profesor=prof, tipo=tipo_pp,
             defaults={
                 'clave': f'PPC-{prof.numero_empleado}',
                 'fecha_inicio': '2024-01-01',
@@ -312,6 +316,13 @@ def crear_datos_prueba():
             'alumno': fernando, 'programa': prog_ddcc
         }
     )
+    tesis4, _ = Tesis.objects.get_or_create(
+        titulo='Clasificacion de patrones de comportamiento en redes sociales mediante redes neuronales',
+        defaults={
+            'estado': 'EN_PROCESO', 'fecha_registro': '2024-03-01',
+            'alumno': sofia, 'programa': prog_mcc
+        }
+    )
 
     print('  Directores de tesis...')
     DirectorTesis.objects.get_or_create(
@@ -329,6 +340,10 @@ def crear_datos_prueba():
     DirectorTesis.objects.get_or_create(
         tesis=tesis3, profesor=sanchez,
         defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2021-09-01'}
+    )
+    DirectorTesis.objects.get_or_create(
+        tesis=tesis4, profesor=reyes,
+        defaults={'tipo_direccion': 'DIRECTOR', 'fecha_asignacion': '2024-03-01'}
     )
 
     print('  Comites tutoriales...')
@@ -364,9 +379,9 @@ def crear_datos_prueba():
 
     print('  Jurado de examen...')
     jurado_data = [
-        (fernando, reyes, 'PRESIDENTE'),
+        (fernando, lopez, 'PRESIDENTE'),
         (fernando, vazquez, 'SECRETARIO'),
-        (fernando, lopez, 'VOCAL'),
+        (fernando, reyes, 'VOCAL'),
         (fernando, hernandez, 'VOCAL'),
         (fernando, sanchez, 'VOCAL'),
         (fernando, gomez, 'SUPLENTE'),

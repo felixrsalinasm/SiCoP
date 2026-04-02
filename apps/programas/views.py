@@ -1,6 +1,5 @@
 from apps.historial.utils import registrar_accion
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -9,7 +8,6 @@ from .models import Laboratorio, Programa, Coordinador
 from .forms import FormularioLaboratorio, FormularioPrograma, FormularioCoordinador
 from apps.cuentas.decoradores import grupo_requerido
 
-GRUPOS_LECTURA = ('Administrador', 'Secretaria')
 GRUPOS_ADMIN = ('Administrador',)
 
 
@@ -47,6 +45,18 @@ class EditarLaboratorio(UpdateView):
         registrar_accion(self.request, 'EDITAR', 'Laboratorio', f'Editar registro: {self.object}')
         messages.success(self.request, 'Laboratorio actualizado correctamente.')
         return response
+
+
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarLaboratorio(DeleteView):
+    model = Laboratorio
+    template_name = 'programas/confirmar_eliminar.html'
+    success_url = reverse_lazy('programas:lista_laboratorios')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'Laboratorio', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Laboratorio eliminado correctamente.')
+        return super().form_valid(form)
 
 
 @method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
@@ -100,6 +110,18 @@ class EditarPrograma(UpdateView):
 
 
 @method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarPrograma(DeleteView):
+    model = Programa
+    template_name = 'programas/confirmar_eliminar.html'
+    success_url = reverse_lazy('programas:lista_programas')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'Programa', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Programa eliminado correctamente.')
+        return super().form_valid(form)
+
+
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class ListaCoordinadores(ListView):
     model = Coordinador
     paginate_by = 20
@@ -141,3 +163,15 @@ class EditarCoordinador(UpdateView):
         registrar_accion(self.request, 'EDITAR', 'Coordinador', f'Editar registro: {self.object}')
         messages.success(self.request, 'Coordinador actualizado correctamente.')
         return response
+
+
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarCoordinador(DeleteView):
+    model = Coordinador
+    template_name = 'programas/confirmar_eliminar.html'
+    success_url = reverse_lazy('programas:lista_coordinadores')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'Coordinador', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Coordinador eliminado correctamente.')
+        return super().form_valid(form)

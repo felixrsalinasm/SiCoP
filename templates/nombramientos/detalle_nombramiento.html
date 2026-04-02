@@ -4,7 +4,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Detalle de Nombramiento</h1>
     <div>
-        {% if user.es_admin or user.es_secretaria %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
         <a href="{% url 'nombramientos:editar_nombramiento' nombramiento.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
         {% endif %}
         <a href="{% url 'nombramientos:lista_nombramientos' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>
@@ -37,7 +37,7 @@
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="margin: 0; color: #4facfe;">Profesores Asociados</h2>
-            {% if user.es_admin or user.es_secretaria %}
+            {% if es_grupo_admin or es_grupo_secretaria %}
             <a href="{% url 'nombramientos:asignar_profesor' %}?nomb={{ nombramiento.pk }}" class="btn" style="background-color: #4facfe; color: #1a1a2e; font-size: 0.8em;">Vincular Profesor</a>
             {% endif %}
         </div>
@@ -45,7 +45,7 @@
             <thead style="background-color: #0f3460;">
                 <tr>
                     <th style="padding: 1rem; text-align: left;">Profesor</th>
-                    {% if user.es_admin %}
+                    {% if es_grupo_admin %}
                     <th style="padding: 1rem; text-align: center;">Acción</th>
                     {% endif %}
                 </tr>
@@ -56,7 +56,7 @@
                     <td style="padding: 1rem;">
                         {{ asignacion.profesor.get_grado_academico_display }} {{ asignacion.profesor.persona.nombre_completo }}
                     </td>
-                    {% if user.es_admin %}
+                    {% if es_grupo_admin %}
                     <td style="padding: 1rem; text-align: center;">
                         <form method="post" action="{% url 'nombramientos:eliminar_nombramiento_profesor' asignacion.pk %}" style="margin: 0;">
                             {% csrf_token %}
@@ -77,7 +77,7 @@
     <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="margin: 0; color: #f6d365;">Programas Asociados</h2>
-            {% if user.es_admin %}
+            {% if es_grupo_admin %}
             <a href="{% url 'nombramientos:asignar_programa' %}?nomb={{ nombramiento.pk }}" class="btn" style="background-color: #f6d365; color: #1a1a2e; font-size: 0.8em;">Vincular Programa</a>
             {% endif %}
         </div>
@@ -85,7 +85,7 @@
             <thead style="background-color: #0f3460;">
                 <tr>
                     <th style="padding: 1rem; text-align: left;">Programa</th>
-                    {% if user.es_admin %}
+                    {% if es_grupo_admin %}
                     <th style="padding: 1rem; text-align: center;">Acción</th>
                     {% endif %}
                 </tr>
@@ -96,7 +96,7 @@
                     <td style="padding: 1rem;">
                         {{ asignacion.programa.siglas }} - {{ asignacion.programa.nombre }}
                     </td>
-                    {% if user.es_admin %}
+                    {% if es_grupo_admin %}
                     <td style="padding: 1rem; text-align: center;">
                         <form method="post" action="{% url 'nombramientos:eliminar_nombramiento_programa' asignacion.pk %}" style="margin: 0;">
                             {% csrf_token %}

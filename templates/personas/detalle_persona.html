@@ -4,10 +4,10 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Detalle de Persona</h1>
     <div>
-        {% if user.es_admin or user.es_secretaria %}
+        {% if es_grupo_admin or es_grupo_secretaria %}
         <a href="{% url 'personas:editar_persona' persona.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
         {% endif %}
-        {% if user.es_admin %}
+        {% if es_grupo_admin %}
         <a href="{% url 'personas:eliminar_persona' persona.pk %}" class="btn" style="background-color: #ff0844; margin-left: 0.5rem;">Eliminar</a>
         {% endif %}
         <a href="{% url 'personas:lista_personas' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver</a>
