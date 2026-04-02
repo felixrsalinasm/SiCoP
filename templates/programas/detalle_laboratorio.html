@@ -4,7 +4,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Ficha de Laboratorio</h1>
     <div>
-        {% if user.es_admin %}
+        {% if es_grupo_admin %}
         <a href="{% url 'programas:editar_laboratorio' laboratorio.pk %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Editar</a>
         {% endif %}
         <a href="{% url 'programas:lista_laboratorios' %}" class="btn" style="background-color: #4facfe; margin-left: 0.5rem;">Volver a la lista</a>

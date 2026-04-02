@@ -3,7 +3,7 @@
 {% block contenido %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Lista de Tipos de Nombramiento</h1>
-    {% if user.es_admin %}
+    {% if es_grupo_admin %}
         <a href="{% url 'nombramientos:crear_tipo' %}" class="btn" style="background-color: #4facfe; color: #1a1a2e;">Nuevo tipo</a>
     {% endif %}
 </div>
@@ -24,8 +24,9 @@
             <td style="padding: 1rem;">{{ tipo.get_origen_display }}</td>
             <td style="padding: 1rem;">{{ tipo.descripcion }}</td>
             <td style="padding: 1rem; text-align: center;">
-                {% if user.es_admin %}
-                <a href="{% url 'nombramientos:editar_tipo' tipo.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% if es_grupo_admin %}
+                <a href="{% url 'nombramientos:editar_tipo' tipo.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                <a href="{% url 'nombramientos:eliminar_tipo' tipo.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}
             </td>
         </tr>

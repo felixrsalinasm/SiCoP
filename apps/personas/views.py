@@ -293,6 +293,30 @@ class DetalleEstudiante(DetailView):
     context_object_name = 'estudiante'
 
 
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarProfesor(DeleteView):
+    model = Profesor
+    template_name = 'personas/confirmar_eliminar.html'
+    success_url = reverse_lazy('personas:lista_profesores')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'Profesor', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Profesor eliminado correctamente.')
+        return super().form_valid(form)
+
+
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarEstudiante(DeleteView):
+    model = Estudiante
+    template_name = 'personas/confirmar_eliminar.html'
+    success_url = reverse_lazy('personas:lista_estudiantes')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'Estudiante', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Alumno eliminado correctamente.')
+        return super().form_valid(form)
+
+
 @method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
 class VistaExportarProfesoresCSV(View):
     def get(self, request, *args, **kwargs):

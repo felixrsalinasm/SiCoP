@@ -115,7 +115,7 @@
         <aside class="sidebar">
             <a href="{% url 'cuentas:dashboard' %}" style="font-weight: bold; color: #fff; background-color: #0f3460;">Dashboard</a>
 
-            {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+            {% if es_grupo_admin %}
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
@@ -139,7 +139,7 @@
                 <h4>Sistema</h4>
                 <a href="{% url 'historial:historial_lista' %}">Historial de Cambios</a>
 
-            {% elif user.groups.all.0.name == 'Secretaria' %}
+            {% elif es_grupo_secretaria %}
                 <h4>Personas</h4>
                 <a href="{% url 'personas:lista_personas' %}">Todas las Personas</a>
                 <a href="{% url 'personas:lista_profesores' %}">Profesores</a>
@@ -151,7 +151,7 @@
                 <h4>Tesis</h4>
                 <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
 
-            {% elif user.groups.all.0.name == 'Profesor' %}
+            {% elif es_grupo_profesor %}
                 <h4>Consulta</h4>
                 <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
                 <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>

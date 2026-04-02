@@ -260,6 +260,18 @@ class EditarJuradoExamen(UpdateView):
 
 
 @method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
+class EliminarJuradoExamen(DeleteView):
+    model = JuradoExamen
+    template_name = 'tesis/confirmar_eliminar.html'
+    success_url = reverse_lazy('tesis:lista_jurado')
+
+    def form_valid(self, form):
+        registrar_accion(self.request, 'ELIMINAR', 'JuradoExamen', f'Eliminar registro: {self.object}')
+        messages.success(self.request, 'Jurado eliminado correctamente.')
+        return super().form_valid(form)
+
+
+@method_decorator(grupo_requerido(*GRUPOS_ADMIN), name='dispatch')
 class RegistrarResultadoExamen(View):
     def get(self, request, pk):
         jurado_ref = get_object_or_404(JuradoExamen, pk=pk)

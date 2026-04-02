@@ -3,7 +3,8 @@ from .views import (
     ListaTesis, DetalleTesis, CrearTesis, EditarTesis, EliminarTesis,
     ListaDirectoresTesis, AsignarDirectorTesis, EditarDirectorTesis, EliminarDirectorTesis,
     ListaComiteTutorial, AsignarComiteTutorial, EditarComiteTutorial, EliminarComiteTutorial,
-    ListaJuradoExamen, AsignarJuradoExamen, EditarJuradoExamen, RegistrarResultadoExamen
+    ListaJuradoExamen, AsignarJuradoExamen, EditarJuradoExamen, EliminarJuradoExamen,
+    RegistrarResultadoExamen
 )
 
 app_name = 'tesis'
@@ -28,5 +29,6 @@ urlpatterns = [
     path('jurado/', ListaJuradoExamen.as_view(), name='lista_jurado'),
     path('jurado/asignar/', AsignarJuradoExamen.as_view(), name='asignar_jurado'),
     path('jurado/<int:pk>/editar/', EditarJuradoExamen.as_view(), name='editar_jurado'),
+    path('jurado/<int:pk>/eliminar/', EliminarJuradoExamen.as_view(), name='eliminar_jurado'),
     path('jurado/<int:pk>/resultado/', RegistrarResultadoExamen.as_view(), name='resultado_jurado'),
 ]

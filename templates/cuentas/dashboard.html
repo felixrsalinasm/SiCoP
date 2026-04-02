@@ -4,18 +4,17 @@
 <h1>Bienvenido, {{ nombre_mostrar }}</h1>
 <p>Rol actual: {{ user.get_rol_display }}</p>
 
-<!-- Estadísticas Generales -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem;">
     <div style="background-color: #e94560; padding: 1.5rem; border-radius: 8px; text-align: center;">
         <h2 style="margin: 0; font-size: 2.5rem;">{{ total_profesores_activos }}</h2>
         <p style="margin: 0;">Profesores Activos</p>
     </div>
-    
+
     <div style="background-color: #4facfe; color: #1a1a2e; padding: 1.5rem; border-radius: 8px; text-align: center;">
         <h2 style="margin: 0; font-size: 2.5rem;">{{ total_nombramientos_vigentes }}</h2>
         <p style="margin: 0; font-weight: bold;">Nombramientos Vigentes</p>
     </div>
-    
+
     <div style="background-color: #f6d365; color: #1a1a2e; padding: 1.5rem; border-radius: 8px; text-align: center;">
         <h2 style="margin: 0; font-size: 2.5rem;">{{ total_directores_activos }}</h2>
         <p style="margin: 0; font-weight: bold;">Directores de Tesis</p>
@@ -34,37 +33,40 @@
 </div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
-    {% if user.es_admin or user.es_coordinador or user.es_secretaria %}
+    {% if es_grupo_admin or es_grupo_secretaria %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
         <h3><a href="{% url 'personas:lista_personas' %}" style="color: #ffffff; text-decoration: none;">Personas</a></h3>
-        <p>Gestión general de personas.</p>
-        <p><a href="{% url 'personas:lista_profesores' %}" style="color: #e94560; text-decoration: none;">Ver Profesores</a> | 
+        <p>Gestion general de personas.</p>
+        <p><a href="{% url 'personas:lista_profesores' %}" style="color: #e94560; text-decoration: none;">Ver Profesores</a> |
            <a href="{% url 'personas:lista_estudiantes' %}" style="color: #4facfe; text-decoration: none;">Ver Estudiantes</a></p>
     </div>
     {% endif %}
 
-    {% if user.es_admin or user.es_coordinador %}
+    {% if es_grupo_admin %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
         <h3><a href="{% url 'programas:lista_programas' %}" style="color: #ffffff; text-decoration: none;">Programas</a></h3>
-        <p>Gestión de programas y coordinadores.</p>
-        <p><a href="{% url 'programas:lista_laboratorios' %}" style="color: #e94560; text-decoration: none;">Ver Laboratorios</a> | 
+        <p>Gestion de programas y coordinadores.</p>
+        <p><a href="{% url 'programas:lista_laboratorios' %}" style="color: #e94560; text-decoration: none;">Ver Laboratorios</a> |
            <a href="{% url 'programas:lista_coordinadores' %}" style="color: #4facfe; text-decoration: none;">Ver Coordinadores</a></p>
     </div>
     {% endif %}
 
-    {% if user.es_admin or user.es_coordinador or user.es_secretaria %}
+    {% if es_grupo_admin or es_grupo_secretaria %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
         <h3><a href="{% url 'nombramientos:lista_nombramientos' %}" style="color: #ffffff; text-decoration: none;">Nombramientos</a></h3>
-        <p>Gestión de nombramientos.</p>
-        <p><a href="{% url 'nombramientos:lista_tipos' %}" style="color: #f6d365; text-decoration: none;">Catálogo de Tipos</a></p>
+        <p>Gestion de nombramientos.</p>
+        {% if es_grupo_admin %}
+        <p><a href="{% url 'nombramientos:lista_tipos' %}" style="color: #f6d365; text-decoration: none;">Catalogo de Tipos</a></p>
+        {% endif %}
     </div>
     {% endif %}
 
-    {% if user.es_admin or user.es_coordinador or user.es_secretaria %}
+    {% if es_grupo_admin or es_grupo_secretaria %}
     <div style="background-color: #0f3460; padding: 1.5rem; border-radius: 8px;">
-        <h3><a href="{% url 'tesis:lista_directores' %}" style="color: #ffffff; text-decoration: none;">Tesis</a></h3>
-        <p>Directores, Comités y Jurados de Examen.</p>
-        <p><a href="{% url 'tesis:lista_comite' %}" style="color: #4facfe; text-decoration: none;">Comités Tutoriales</a> | 
+        <h3><a href="{% url 'tesis:lista_tesis' %}" style="color: #ffffff; text-decoration: none;">Tesis</a></h3>
+        <p>Directores, Comites y Jurados de Examen.</p>
+        <p><a href="{% url 'tesis:lista_directores' %}" style="color: #e94560; text-decoration: none;">Directores</a> |
+           <a href="{% url 'tesis:lista_comite' %}" style="color: #4facfe; text-decoration: none;">Comites Tutoriales</a> |
            <a href="{% url 'tesis:lista_jurado' %}" style="color: #f6d365; text-decoration: none;">Jurados de Examen</a></p>
     </div>
     {% endif %}

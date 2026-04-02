@@ -3,7 +3,7 @@
 {% block contenido %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Lista de Programas</h1>
-    {% if user.es_admin %}
+    {% if es_grupo_admin %}
         <a href="{% url 'programas:crear_programa' %}" class="btn" style="background-color: #f6d365; color: #1a1a2e;">Nuevo programa</a>
     {% endif %}
 </div>
@@ -36,7 +36,6 @@
                 {% endwith %}
             </td>
             <td style="padding: 1rem; text-align: center;">
-                {% comment %} In a real app we'd define a method or property filter for this but since rules forbid comments, doing it dynamically {% endcomment %}
                 {{ prog.estudiantes.count }}
             </td>
             <td style="padding: 1rem; text-align: center;">
@@ -44,8 +43,9 @@
             </td>
             <td style="padding: 1rem; text-align: center;">
                 <a href="{% url 'programas:detalle_programa' prog.pk %}" style="color: #4facfe; text-decoration: none; margin-right: 0.5rem;">Ver</a>
-                {% if user.es_admin %}
-                <a href="{% url 'programas:editar_programa' prog.pk %}" style="color: #f6d365; text-decoration: none;">Editar</a>
+                {% if es_grupo_admin %}
+                <a href="{% url 'programas:editar_programa' prog.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
+                <a href="{% url 'programas:eliminar_programa' prog.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}
             </td>
         </tr>
