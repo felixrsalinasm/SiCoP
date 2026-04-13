@@ -1,5 +1,7 @@
+from django.contrib.auth.models import Group
 from django.test import TestCase, Client
 from django.urls import reverse
+
 from apps.cuentas.models import Usuario
 from apps.personas.models import Persona
 from apps.historial.models import Registro
@@ -8,9 +10,18 @@ from apps.historial.models import Registro
 class TestHistorial(TestCase):
     def setUp(self):
         self.cliente = Client()
+
         self.usuario_admin = Usuario.objects.create_user(username='admin1', password='pass', rol=Usuario.Roles.ADMIN)
+        grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
+        self.usuario_admin.groups.add(grupo_admin)
+
         self.usuario_prof = Usuario.objects.create_user(username='prof1', password='pass', rol=Usuario.Roles.PROFESOR)
+        grupo_prof, _ = Group.objects.get_or_create(name='Profesor')
+        self.usuario_prof.groups.add(grupo_prof)
+
         self.usuario_secr = Usuario.objects.create_user(username='secr1', password='pass', rol=Usuario.Roles.SECRETARIA)
+        grupo_secr, _ = Group.objects.get_or_create(name='Secretaria')
+        self.usuario_secr.groups.add(grupo_secr)
 
     def test_crear_persona_registra_historial(self):
         self.cliente.login(username='secr1', password='pass')
@@ -18,9 +29,7 @@ class TestHistorial(TestCase):
             'paterno': 'Lopez',
             'materno': 'Diaz',
             'nombres': 'Ana',
-            'rfc': 'LODA900101XYZ',
             'email': 'ana@ipn.mx',
-            'curp': 'LODA900101XYZQWE12',
             'genero': 'F'
         }
         self.cliente.post(reverse('personas:crear_persona'), datos)

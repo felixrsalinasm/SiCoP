@@ -1,5 +1,7 @@
+from django.contrib.auth.models import Group
 from django.test import TestCase, Client
 from django.urls import reverse
+
 from apps.cuentas.models import Usuario
 
 
@@ -11,11 +13,16 @@ class TestCuentas(TestCase):
             password='Password123!',
             rol=Usuario.Roles.PROFESOR
         )
+        grupo_prof, _ = Group.objects.get_or_create(name='Profesor')
+        self.usuario_profesor.groups.add(grupo_prof)
+
         self.usuario_admin = Usuario.objects.create_user(
             username='testadmin',
             password='Password123!',
             rol=Usuario.Roles.ADMIN
         )
+        grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
+        self.usuario_admin.groups.add(grupo_admin)
 
     def test_acceso_no_autenticado_redirige_login(self):
         respuesta = self.cliente.get(reverse('cuentas:dashboard'))
@@ -30,9 +37,9 @@ class TestCuentas(TestCase):
         self.assertTrue('form' in respuesta.context)
         self.assertTrue(respuesta.context['form'].errors)
 
-    def test_login_correcto_admin_redirige_admin(self):
+    def test_login_correcto_admin_redirige_dashboard(self):
         respuesta = self.cliente.post(reverse('cuentas:login'), {
             'username': 'testadmin',
             'password': 'Password123!'
         })
-        self.assertRedirects(respuesta, '/admin/', fetch_redirect_response=False)
+        self.assertRedirects(respuesta, '/dashboard/', fetch_redirect_response=False)

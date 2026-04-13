@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -13,9 +14,18 @@ from apps.programas.models import Laboratorio, Programa
 class TestPersonas(TestCase):
     def setUp(self):
         self.cliente = Client()
+
         self.usuario_prof = Usuario.objects.create_user(username='prof1', password='pass', rol=Usuario.Roles.PROFESOR)
+        grupo_prof, _ = Group.objects.get_or_create(name='Profesor')
+        self.usuario_prof.groups.add(grupo_prof)
+
         self.usuario_secr = Usuario.objects.create_user(username='secr1', password='pass', rol=Usuario.Roles.SECRETARIA)
-        self.usuario_coord = Usuario.objects.create_user(username='coord1', password='pass', rol=Usuario.Roles.COORDINADOR)
+        grupo_secr, _ = Group.objects.get_or_create(name='Secretaria')
+        self.usuario_secr.groups.add(grupo_secr)
+
+        self.usuario_admin = Usuario.objects.create_user(username='admin1', password='pass', rol=Usuario.Roles.ADMIN)
+        grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
+        self.usuario_admin.groups.add(grupo_admin)
 
     def test_lista_personas_requiere_autenticacion(self):
         respuesta = self.cliente.get(reverse('personas:lista_personas'))
@@ -41,8 +51,8 @@ class TestPersonas(TestCase):
         respuesta = self.cliente.get(reverse('personas:exportar_profesores_csv'))
         self.assertEqual(respuesta.status_code, 403)
 
-    def test_exportar_estudiantes_csv_coordinador_200(self):
-        self.cliente.login(username='coord1', password='pass')
+    def test_exportar_estudiantes_csv_admin_200(self):
+        self.cliente.login(username='admin1', password='pass')
         respuesta = self.cliente.get(reverse('personas:exportar_estudiantes_csv'))
         self.assertEqual(respuesta.status_code, 200)
 
