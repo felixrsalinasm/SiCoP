@@ -17,6 +17,11 @@ class VistaLogin(LoginView):
         usuario = self.request.user
         if usuario.es_profesor():
             if hasattr(usuario, 'persona') and hasattr(usuario.persona, 'profesor'):
+                tiene_estudiantes = DirectorTesis.objects.filter(
+                    profesor=usuario.persona.profesor, activo=True
+                ).exists()
+                if tiene_estudiantes:
+                    return '/tesis/mis-estudiantes/'
                 return f'/personas/profesores/{usuario.persona.profesor.pk}/'
             else:
                 messages.warning(self.request, 'No tienes un perfil de profesor asociado en el sistema.')

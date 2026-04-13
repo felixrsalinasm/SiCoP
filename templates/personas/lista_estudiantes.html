@@ -72,6 +72,12 @@
                 {% if es_grupo_admin or es_grupo_secretaria %}
                 <a href="{% url 'personas:editar_estudiante' est.pk %}" style="color: #f6d365; text-decoration: none; margin-right: 0.5rem;">Editar</a>
                 {% endif %}
+                {% if est.estado == 'ACTIVO' and es_grupo_admin or est.estado == 'ACTIVO' and es_grupo_coordinador %}
+                <form method="post" action="{% url 'personas:baja_temporal_estudiante' est.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: #ff9800; cursor: pointer; text-decoration: underline; font-size: inherit;">Baja temporal</button>
+                </form>
+                {% endif %}
                 {% if es_grupo_admin %}
                 <a href="{% url 'personas:eliminar_estudiante' est.pk %}" style="color: #e94560; text-decoration: none;">Eliminar</a>
                 {% endif %}

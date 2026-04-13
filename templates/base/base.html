@@ -153,6 +153,7 @@
 
             {% elif es_grupo_profesor %}
                 <h4>Consulta</h4>
+                <a href="{% url 'tesis:mis_estudiantes' %}">Mis estudiantes</a>
                 <a href="{% url 'tesis:lista_tesis' %}">Tesis</a>
                 <a href="{% url 'tesis:lista_comite' %}">Comite Tutorial</a>
                 {% if user.persona and user.persona.profesor %}

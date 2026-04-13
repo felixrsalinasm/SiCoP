@@ -15,6 +15,7 @@ GRUPOS_LECTURA = ('Administrador', 'Secretaria')
 GRUPOS_ESCRITURA = ('Administrador', 'Secretaria')
 GRUPOS_ADMIN = ('Administrador',)
 GRUPOS_PROFESOR_VER = ('Administrador', 'Secretaria', 'Profesor')
+GRUPOS_BAJA = ('Administrador', 'Coordinador')
 
 
 @method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
@@ -315,6 +316,20 @@ class EliminarEstudiante(DeleteView):
         registrar_accion(self.request, 'ELIMINAR', 'Estudiante', f'Eliminar registro: {self.object}')
         messages.success(self.request, 'Alumno eliminado correctamente.')
         return super().form_valid(form)
+
+
+@method_decorator(grupo_requerido(*GRUPOS_BAJA), name='dispatch')
+class VistaDesactivarEstudiante(View):
+    def post(self, request, pk):
+        estudiante = get_object_or_404(Estudiante, pk=pk)
+        if estudiante.estado != Estudiante.Estado.ACTIVO:
+            messages.error(request, 'El estudiante ya no esta activo.')
+            return redirect('personas:lista_estudiantes')
+        estudiante.estado = Estudiante.Estado.BAJA_TEMPORAL
+        estudiante.save()
+        registrar_accion(request, 'EDITAR', 'Estudiante', f'Baja temporal: {estudiante}')
+        messages.success(request, f'{estudiante.persona.nombre_completo} ha sido dado de baja temporal.')
+        return redirect('personas:lista_estudiantes')
 
 
 @method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')

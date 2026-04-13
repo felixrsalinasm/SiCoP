@@ -14,6 +14,7 @@ from apps.cuentas.decoradores import grupo_requerido
 GRUPOS_LECTURA = ('Administrador', 'Secretaria', 'Profesor')
 GRUPOS_ESCRITURA = ('Administrador', 'Secretaria')
 GRUPOS_ADMIN = ('Administrador',)
+GRUPOS_TODOS = ('Administrador', 'Coordinador', 'Secretaria', 'Profesor')
 
 
 @method_decorator(grupo_requerido(*GRUPOS_LECTURA), name='dispatch')
@@ -298,3 +299,24 @@ class RegistrarResultadoExamen(View):
         else:
             messages.info(request, 'Los resultados del jurado han sido guardados.')
         return redirect('tesis:lista_jurado')
+
+
+@method_decorator(grupo_requerido(*GRUPOS_TODOS), name='dispatch')
+class VistaEstudiantesDelProfesor(ListView):
+    template_name = 'tesis/mis_estudiantes.html'
+    context_object_name = 'directores'
+    paginate_by = 20
+
+    def get_queryset(self):
+        usuario = self.request.user
+        qs = DirectorTesis.objects.select_related(
+            'tesis__alumno__persona', 'tesis__programa', 'profesor__persona'
+        ).filter(activo=True)
+        if usuario.groups.filter(name='Profesor').exists() and not usuario.groups.filter(
+            name__in=['Administrador', 'Coordinador', 'Secretaria']
+        ).exists():
+            if hasattr(usuario, 'persona') and hasattr(usuario.persona, 'profesor'):
+                qs = qs.filter(profesor=usuario.persona.profesor)
+            else:
+                qs = qs.none()
+        return qs.order_by('-fecha_asignacion')

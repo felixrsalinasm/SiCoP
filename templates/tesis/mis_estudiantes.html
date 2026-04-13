@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+
+{% block contenido %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Mis Estudiantes de Tesis</h1>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; background-color: #1a1a2e; border: 1px solid #0f3460; border-radius: 8px; overflow: hidden;">
+    <thead style="background-color: #0f3460;">
+        <tr>
+            <th style="padding: 1rem; text-align: left;">Estudiante</th>
+            <th style="padding: 1rem; text-align: center;">Programa</th>
+            <th style="padding: 1rem; text-align: center;">Rol</th>
+            <th style="padding: 1rem; text-align: center;">Fecha asignacion</th>
+            <th style="padding: 1rem; text-align: center;">Estado del estudiante</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dir in directores %}
+        <tr style="border-bottom: 1px solid #0f3460;">
+            <td style="padding: 1rem;">{{ dir.tesis.alumno.persona.nombre_completo }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ dir.tesis.programa.siglas }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ dir.get_tipo_direccion_display }}</td>
+            <td style="padding: 1rem; text-align: center;">{{ dir.fecha_asignacion }}</td>
+            <td style="padding: 1rem; text-align: center;">
+                <span style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.85em;
+                    {% if dir.tesis.alumno.estado == 'ACTIVO' %}background-color: #28a745;{% elif dir.tesis.alumno.estado == 'GRADUADO' %}background-color: #007bff;{% else %}background-color: #dc3545;{% endif %}">
+                    {{ dir.tesis.alumno.get_estado_display }}
+                </span>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" style="padding: 1rem; text-align: center;">No tienes estudiantes de tesis asignados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn">Anterior</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Anterior</span>
+    {% endif %}
+
+    <span style="font-weight: bold;">Pagina {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn">Siguiente</a>
+    {% else %}
+        <span class="btn" style="opacity: 0.5; cursor: not-allowed;">Siguiente</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

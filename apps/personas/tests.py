@@ -27,6 +27,10 @@ class TestPersonas(TestCase):
         grupo_admin, _ = Group.objects.get_or_create(name='Administrador')
         self.usuario_admin.groups.add(grupo_admin)
 
+        self.usuario_coord = Usuario.objects.create_user(username='coord1', password='pass', rol=Usuario.Roles.COORDINADOR)
+        grupo_coord, _ = Group.objects.get_or_create(name='Coordinador')
+        self.usuario_coord.groups.add(grupo_coord)
+
     def test_lista_personas_requiere_autenticacion(self):
         respuesta = self.cliente.get(reverse('personas:lista_personas'))
         self.assertEqual(respuesta.status_code, 302)
@@ -60,6 +64,80 @@ class TestPersonas(TestCase):
         self.cliente.login(username='secr1', password='pass')
         respuesta = self.cliente.get(reverse('personas:exportar_profesores_csv'))
         self.assertIn('attachment', respuesta['Content-Disposition'])
+
+
+class TestSecretariaEdita(TestCase):
+    def setUp(self):
+        self.cliente = Client()
+        self.usuario_secr = Usuario.objects.create_user(username='secr1', password='pass', rol=Usuario.Roles.SECRETARIA)
+        grupo_secr, _ = Group.objects.get_or_create(name='Secretaria')
+        self.usuario_secr.groups.add(grupo_secr)
+
+        self.persona = Persona.objects.create(paterno='Test', materno='Edit', nombres='Secr', email='sec_edit@ipn.mx')
+        self.profesor = Profesor.objects.create(persona=self.persona, grado_academico='DOCTORADO', activo=True)
+
+        self.programa = Programa.objects.create(siglas='MCC_SE', nombre='Maestria SE', nivel='MAESTRIA', activo=True)
+        persona_est = Persona.objects.create(paterno='Est', materno='SE', nombres='Uno', email='est_se@ipn.mx')
+        self.estudiante = Estudiante.objects.create(
+            persona=persona_est, programa=self.programa, matricula='SE001',
+            generacion=2024, fecha_ingreso=date(2024, 8, 1)
+        )
+
+    def test_secretaria_editar_persona_200(self):
+        self.cliente.login(username='secr1', password='pass')
+        respuesta = self.cliente.get(reverse('personas:editar_persona', args=[self.persona.pk]))
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_secretaria_editar_profesor_200(self):
+        self.cliente.login(username='secr1', password='pass')
+        respuesta = self.cliente.get(reverse('personas:editar_profesor', args=[self.profesor.pk]))
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_secretaria_editar_estudiante_200(self):
+        self.cliente.login(username='secr1', password='pass')
+        respuesta = self.cliente.get(reverse('personas:editar_estudiante', args=[self.estudiante.pk]))
+        self.assertEqual(respuesta.status_code, 200)
+
+
+class TestBajaTemporalEstudiante(TestCase):
+    def setUp(self):
+        self.cliente = Client()
+
+        self.usuario_coord = Usuario.objects.create_user(username='coord1', password='pass', rol=Usuario.Roles.COORDINADOR)
+        grupo_coord, _ = Group.objects.get_or_create(name='Coordinador')
+        self.usuario_coord.groups.add(grupo_coord)
+
+        self.usuario_secr = Usuario.objects.create_user(username='secr1', password='pass', rol=Usuario.Roles.SECRETARIA)
+        grupo_secr, _ = Group.objects.get_or_create(name='Secretaria')
+        self.usuario_secr.groups.add(grupo_secr)
+
+        self.programa = Programa.objects.create(siglas='MCC_BT', nombre='Maestria BT', nivel='MAESTRIA', activo=True)
+        persona = Persona.objects.create(paterno='Baja', materno='Test', nombres='Uno', email='baja@ipn.mx')
+        self.estudiante = Estudiante.objects.create(
+            persona=persona, programa=self.programa, matricula='BT001',
+            generacion=2024, fecha_ingreso=date(2024, 8, 1), estado='ACTIVO'
+        )
+
+    def test_coordinador_baja_temporal_activo(self):
+        self.cliente.login(username='coord1', password='pass')
+        respuesta = self.cliente.post(reverse('personas:baja_temporal_estudiante', args=[self.estudiante.pk]))
+        self.assertEqual(respuesta.status_code, 302)
+        self.estudiante.refresh_from_db()
+        self.assertEqual(self.estudiante.estado, 'BAJA_TEMPORAL')
+
+    def test_secretaria_baja_temporal_403(self):
+        self.cliente.login(username='secr1', password='pass')
+        respuesta = self.cliente.post(reverse('personas:baja_temporal_estudiante', args=[self.estudiante.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_baja_temporal_estudiante_ya_baja(self):
+        self.estudiante.estado = 'BAJA_TEMPORAL'
+        self.estudiante.save()
+        self.cliente.login(username='coord1', password='pass')
+        respuesta = self.cliente.post(reverse('personas:baja_temporal_estudiante', args=[self.estudiante.pk]))
+        self.assertEqual(respuesta.status_code, 302)
+        self.estudiante.refresh_from_db()
+        self.assertEqual(self.estudiante.estado, 'BAJA_TEMPORAL')
 
 
 class TestPersonaValidaciones(TestCase):

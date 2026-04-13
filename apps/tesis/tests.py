@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -188,3 +189,68 @@ class TestJuradoExamenValidaciones(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             jurado.clean()
         self.assertIn('fecha_examen', ctx.exception.message_dict)
+
+
+class TestMisEstudiantes(TestCase):
+    def setUp(self):
+        self.cliente = Client()
+
+        self.programa = Programa.objects.create(
+            siglas='MCC_ME', nombre='Maestria ME', nivel='MAESTRIA', activo=True
+        )
+
+        persona_prof1 = Persona.objects.create(
+            paterno='Director', materno='Uno', nombres='Prof', email='dir1@ipn.mx'
+        )
+        self.prof1 = Profesor.objects.create(
+            persona=persona_prof1, grado_academico='DOCTORADO', activo=True
+        )
+        self.usuario_prof1 = Usuario.objects.create_user(username='dirprof1', password='pass', rol=Usuario.Roles.PROFESOR)
+        grupo_prof, _ = Group.objects.get_or_create(name='Profesor')
+        self.usuario_prof1.groups.add(grupo_prof)
+        persona_prof1.usuario = self.usuario_prof1
+        persona_prof1.save()
+
+        persona_prof2 = Persona.objects.create(
+            paterno='Director', materno='Dos', nombres='Prof', email='dir2@ipn.mx'
+        )
+        self.prof2 = Profesor.objects.create(
+            persona=persona_prof2, grado_academico='DOCTORADO', activo=True
+        )
+
+        persona_est = Persona.objects.create(
+            paterno='Alumno', materno='ME', nombres='Uno', email='alumno_me@ipn.mx'
+        )
+        self.est = Estudiante.objects.create(
+            persona=persona_est, programa=self.programa,
+            matricula='ME001', generacion=2024, fecha_ingreso=date(2024, 8, 1)
+        )
+        self.tesis = Tesis.objects.create(
+            titulo='Tesis ME Test', estado='EN_PROCESO',
+            fecha_registro=date(2024, 9, 1), alumno=self.est, programa=self.programa
+        )
+        DirectorTesis.objects.create(
+            tesis=self.tesis, profesor=self.prof1,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+
+        self.usuario_secr = Usuario.objects.create_user(username='secr1', password='pass', rol=Usuario.Roles.SECRETARIA)
+        grupo_secr, _ = Group.objects.get_or_create(name='Secretaria')
+        self.usuario_secr.groups.add(grupo_secr)
+
+    def test_profesor_ve_mis_estudiantes_200(self):
+        self.cliente.login(username='dirprof1', password='pass')
+        respuesta = self.cliente.get(reverse('tesis:mis_estudiantes'))
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_profesor_solo_ve_sus_estudiantes(self):
+        self.cliente.login(username='dirprof1', password='pass')
+        respuesta = self.cliente.get(reverse('tesis:mis_estudiantes'))
+        directores = respuesta.context['directores']
+        for d in directores:
+            self.assertEqual(d.profesor.pk, self.prof1.pk)
+
+    def test_secretaria_ve_mis_estudiantes_200(self):
+        self.cliente.login(username='secr1', password='pass')
+        respuesta = self.cliente.get(reverse('tesis:mis_estudiantes'))
+        self.assertEqual(respuesta.status_code, 200)

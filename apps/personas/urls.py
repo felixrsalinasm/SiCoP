@@ -4,7 +4,8 @@ from .views import (
     ListaProfesores, CrearProfesor, EditarProfesor, DetalleProfesor, EliminarProfesor,
     VistaExportarProfesoresCSV,
     ListaEstudiantes, CrearEstudiante, EditarEstudiante, DetalleEstudiante, EliminarEstudiante,
-    VistaExportarEstudiantesCSV
+    VistaExportarEstudiantesCSV,
+    VistaDesactivarEstudiante
 )
 
 app_name = 'personas'
@@ -29,4 +30,5 @@ urlpatterns = [
     path('estudiantes/<int:pk>/', DetalleEstudiante.as_view(), name='detalle_estudiante'),
     path('estudiantes/<int:pk>/editar/', EditarEstudiante.as_view(), name='editar_estudiante'),
     path('estudiantes/<int:pk>/eliminar/', EliminarEstudiante.as_view(), name='eliminar_estudiante'),
+    path('estudiantes/<int:pk>/baja/', VistaDesactivarEstudiante.as_view(), name='baja_temporal_estudiante'),
 ]
