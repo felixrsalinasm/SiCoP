@@ -1,5 +1,8 @@
-from django.db import models
+from datetime import date
+
 from django.core.exceptions import ValidationError
+from django.db import models
+
 from apps.personas.models import ModeloBase
 
 
@@ -78,3 +81,34 @@ class Coordinador(ModeloBase):
 
     def es_actual(self):
         return self.fecha_fin is None
+
+    def clean(self):
+        super().clean()
+        errores = {}
+        self._validar_fechas(errores)
+        self._validar_unicidad_coordinador_activo(errores)
+        if errores:
+            raise ValidationError(errores)
+
+    def _validar_fechas(self, errores):
+        hoy = date.today()
+        if self.fecha_inicio and self.fecha_inicio > hoy:
+            errores['fecha_inicio'] = 'La fecha de inicio no puede ser futura.'
+        if self.fecha_inicio and self.fecha_fin:
+            if self.fecha_fin <= self.fecha_inicio:
+                errores['fecha_fin'] = (
+                    'La fecha de fin debe ser posterior a la fecha de inicio.'
+                )
+
+    def _validar_unicidad_coordinador_activo(self, errores):
+        if self.fecha_fin is not None or not self.programa_id:
+            return
+        qs = Coordinador.objects.filter(
+            programa=self.programa, fecha_fin__isnull=True
+        ).exclude(pk=self.pk)
+        coordinador_activo = qs.first()
+        if coordinador_activo:
+            errores['programa'] = (
+                f'Ya existe un coordinador activo para este programa: '
+                f'{coordinador_activo.profesor}.'
+            )

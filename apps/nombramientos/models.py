@@ -1,5 +1,9 @@
+from datetime import date
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
 from apps.personas.models import ModeloBase
 
 
@@ -55,6 +59,24 @@ class Nombramiento(ModeloBase):
 
     def esta_vigente(self):
         return self.vigente
+
+    def clean(self):
+        super().clean()
+        errores = {}
+        self._validar_fechas(errores)
+        if errores:
+            raise ValidationError(errores)
+
+    def _validar_fechas(self, errores):
+        if self.fecha_emision and self.fecha_vencimiento:
+            if self.fecha_vencimiento <= self.fecha_emision:
+                errores['fecha_vencimiento'] = (
+                    'La fecha de vencimiento debe ser posterior a la fecha de emision.'
+                )
+        if self.fecha_emision and self.fecha_emision < date(2000, 1, 1):
+            errores['fecha_emision'] = (
+                'La fecha de emision no puede ser anterior al anio 2000.'
+            )
 
 
 class NombramientoProfesor(ModeloBase):

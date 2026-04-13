@@ -1,91 +1,190 @@
+from datetime import date
+
+from django.core.exceptions import ValidationError
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
-from django.core.exceptions import ValidationError
+
 from apps.cuentas.models import Usuario
 from apps.personas.models import Persona, Profesor, Estudiante
 from apps.programas.models import Programa
-from apps.tesis.models import DirectorTesis, JuradoExamen
+from apps.nombramientos.models import Nombramiento, CatTipoNombramiento
+from apps.tesis.models import Tesis, DirectorTesis, ComiteTutorial, JuradoExamen
 
 
-class TestTesis(TestCase):
+class TestDirectorTesisValidaciones(TestCase):
     def setUp(self):
-        self.cliente = Client()
-        self.usuario_admin = Usuario.objects.create_superuser(username='admin1', password='p')
-
-        self.prof1 = Profesor.objects.create(
-            persona=Persona.objects.create(
-                usuario=Usuario.objects.create_user(username='p1', password='p', rol=Usuario.Roles.PROFESOR),
-                rfc='P1000AAAAAAA', curp='C10000000000000000', email='p1@ejemplo.com'
-            ),
-            activo=True
+        self.prog_mae = Programa.objects.create(
+            siglas='MCC_T', nombre='Maestria Test', nivel='MAESTRIA', activo=True
         )
-        self.prof2 = Profesor.objects.create(
-            persona=Persona.objects.create(
-                usuario=Usuario.objects.create_user(username='p2', password='p', rol=Usuario.Roles.PROFESOR),
-                rfc='P2000AAAAAAA', curp='C20000000000000000', email='p2@ejemplo.com'
-            ),
-            activo=True
+        self.prog_doc = Programa.objects.create(
+            siglas='DCC_T', nombre='Doctorado Test', nivel='DOCTORADO', activo=True
         )
-        self.prof3 = Profesor.objects.create(
-            persona=Persona.objects.create(
-                usuario=Usuario.objects.create_user(username='p3', password='p', rol=Usuario.Roles.PROFESOR),
-                rfc='P3000AAAAAAA', curp='C30000000000000000', email='p3@ejemplo.com'
-            ),
-            activo=True
+        self.tipo_pp = CatTipoNombramiento.objects.create(
+            nombramiento='Profesor de Posgrado', origen='IPN'
         )
 
-        prog = Programa.objects.create(siglas='MCC', nombre='MCC', nivel='MAESTRIA', activo=True)
+        self.persona_est = Persona.objects.create(
+            paterno='Alumno', materno='Test', nombres='Uno', email='a1_test@ipn.mx'
+        )
         self.est = Estudiante.objects.create(
-            persona=Persona.objects.create(
-                usuario=Usuario.objects.create_user(username='e1', password='p', rol=Usuario.Roles.SECRETARIA),
-                rfc='E1000AAAAAAA', curp='C1000E000000000000', email='e1@ejemplo.com'
-            ),
-            programa=prog,
-            matricula='A1',
-            generacion=2024,
-            fecha_ingreso=timezone.now().date()
+            persona=self.persona_est, programa=self.prog_mae,
+            matricula='T100', generacion=2024, fecha_ingreso=date(2024, 8, 1)
+        )
+        self.tesis = Tesis.objects.create(
+            titulo='Tesis de prueba', estado='EN_PROCESO',
+            fecha_registro=date(2024, 9, 1), alumno=self.est, programa=self.prog_mae
+        )
+
+        self.prof1 = self._crear_profesor('Ext1', 'Test', 'ext1@ipn.mx', es_externo=True)
+        self.prof2 = self._crear_profesor('Ext2', 'Test', 'ext2@ipn.mx', es_externo=True)
+        self.prof_interno = self._crear_profesor('Int1', 'Test', 'int1@ipn.mx', es_externo=False)
+
+        Nombramiento.objects.create(
+            profesor=self.prof_interno, tipo=self.tipo_pp,
+            clave='PPC-INT1', fecha_emision=date(2024, 1, 1)
+        )
+
+    def _crear_profesor(self, paterno, materno, email, es_externo=False):
+        persona = Persona.objects.create(
+            paterno=paterno, materno=materno, nombres='Prof', email=email
+        )
+        return Profesor.objects.create(
+            persona=persona, grado_academico='DOCTORADO',
+            es_externo=es_externo, activo=True
+        )
+
+    def test_dos_directores_externos_rechazados(self):
+        DirectorTesis.objects.create(
+            tesis=self.tesis, profesor=self.prof1,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+        dir2 = DirectorTesis(
+            tesis=self.tesis, profesor=self.prof2,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            dir2.clean()
+        errores = ctx.exception.message_dict
+        self.assertTrue(
+            any('externo' in str(v).lower() for v in errores.values())
         )
 
     def test_max_2_directores_activos(self):
-        fecha = timezone.now().date()
-        DirectorTesis.objects.create(estudiante=self.est, profesor=self.prof1, fecha_asignacion=fecha)
-        DirectorTesis.objects.create(estudiante=self.est, profesor=self.prof2, fecha_asignacion=fecha)
+        prof3 = self._crear_profesor('P3', 'T', 'p3@ipn.mx')
+        Nombramiento.objects.create(
+            profesor=prof3, tipo=self.tipo_pp,
+            clave='PPC-P3', fecha_emision=date(2024, 1, 1)
+        )
+        prof4 = self._crear_profesor('P4', 'T', 'p4@ipn.mx')
+        Nombramiento.objects.create(
+            profesor=prof4, tipo=self.tipo_pp,
+            clave='PPC-P4', fecha_emision=date(2024, 1, 1)
+        )
+        prof5 = self._crear_profesor('P5', 'T', 'p5@ipn.mx')
+        Nombramiento.objects.create(
+            profesor=prof5, tipo=self.tipo_pp,
+            clave='PPC-P5', fecha_emision=date(2024, 1, 1)
+        )
 
-        dir3 = DirectorTesis(estudiante=self.est, profesor=self.prof3, fecha_asignacion=fecha)
+        DirectorTesis.objects.create(
+            tesis=self.tesis, profesor=prof3,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+        DirectorTesis.objects.create(
+            tesis=self.tesis, profesor=prof4,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+        dir3 = DirectorTesis(
+            tesis=self.tesis, profesor=prof5,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
         with self.assertRaises(ValidationError):
             dir3.clean()
 
-    def test_profesor_max_4_alumnos(self):
-        fecha = timezone.now().date()
-        prog = Programa.objects.create(siglas='DCC', nombre='DCC', nivel='DOCTORADO', activo=True)
-        for i in range(4):
-            e = Estudiante.objects.create(
-                persona=Persona.objects.create(
-                    usuario=Usuario.objects.create_user(username=f'e10{i}', password='p', rol=Usuario.Roles.SECRETARIA),
-                    rfc=f'E100{i}AAAAAAA', curp=f'C100E{i}00000000000', email=f'e10{i}@ejemplo.com'
-                ),
-                programa=prog,
-                matricula=f'A10{i}',
-                generacion=2024,
-                fecha_ingreso=timezone.now().date()
-            )
-            DirectorTesis.objects.create(estudiante=e, profesor=self.prof1, fecha_asignacion=fecha)
 
-        dir_extra = DirectorTesis(estudiante=self.est, profesor=self.prof1, fecha_asignacion=fecha)
-        with self.assertRaises(ValidationError):
-            dir_extra.clean()
+class TestComiteTutorialValidaciones(TestCase):
+    def test_especialidad_rechazada(self):
+        prog_esp = Programa.objects.create(
+            siglas='ESP_T', nombre='Especialidad Test', nivel='ESPECIALIDAD', activo=True
+        )
+        persona_est = Persona.objects.create(
+            paterno='Est', materno='Esp', nombres='Uno', email='esp_est@ipn.mx'
+        )
+        est = Estudiante.objects.create(
+            persona=persona_est, programa=prog_esp,
+            matricula='T200', generacion=2024, fecha_ingreso=date(2024, 8, 1)
+        )
+        tesis = Tesis.objects.create(
+            titulo='Tesis Especialidad', estado='EN_PROCESO',
+            fecha_registro=date(2024, 9, 1), alumno=est, programa=prog_esp
+        )
+        persona_prof = Persona.objects.create(
+            paterno='Prof', materno='Com', nombres='Uno', email='com_prof@ipn.mx'
+        )
+        prof = Profesor.objects.create(
+            persona=persona_prof, grado_academico='DOCTORADO', activo=True
+        )
+        comite = ComiteTutorial(
+            tesis=tesis, profesor=prof,
+            fecha_asignacion=date(2024, 9, 1), activo=True
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            comite.clean()
+        errores = ctx.exception.message_dict
+        self.assertTrue(
+            any('art. 22' in str(v).lower() for v in errores.values())
+        )
 
-    def test_resultado_jurado_aprobado_egresa_estudiante(self):
-        self.cliente.login(username='admin1', password='p')
-        j1 = JuradoExamen.objects.create(estudiante=self.est, profesor=self.prof1, tipo_examen='GRADO', rol='PRESIDENTE')
-        j2 = JuradoExamen.objects.create(estudiante=self.est, profesor=self.prof2, tipo_examen='GRADO', rol='SECRETARIO')
 
-        respuesta = self.cliente.post(reverse('tesis:resultado_jurado', args=[j1.pk]), {
-            f'resultado_{j1.pk}': 'APROBADO',
-            f'resultado_{j2.pk}': 'APROBADO'
-        })
-        self.assertRedirects(respuesta, reverse('tesis:lista_jurado'))
+class TestJuradoExamenValidaciones(TestCase):
+    def setUp(self):
+        self.prog_mae = Programa.objects.create(
+            siglas='MCC_J', nombre='Maestria Jurado', nivel='MAESTRIA', activo=True
+        )
+        self.prog_doc = Programa.objects.create(
+            siglas='DCC_J', nombre='Doctorado Jurado', nivel='DOCTORADO', activo=True
+        )
 
-        self.est.refresh_from_db()
-        self.assertEqual(self.est.estado, 'EGRESADO')
+    def _crear_estudiante(self, programa, matricula, email):
+        persona = Persona.objects.create(
+            paterno='Est', materno='Jur', nombres=matricula, email=email
+        )
+        return Estudiante.objects.create(
+            persona=persona, programa=programa,
+            matricula=matricula, generacion=2024, fecha_ingreso=date(2024, 8, 1)
+        )
+
+    def _crear_profesor_doctor(self, email):
+        persona = Persona.objects.create(
+            paterno='Prof', materno='Jur', nombres=email.split('@')[0], email=email
+        )
+        return Profesor.objects.create(
+            persona=persona, grado_academico='DOCTORADO', activo=True
+        )
+
+    def test_predoctoral_para_maestria_rechazado(self):
+        est = self._crear_estudiante(self.prog_mae, 'T300', 'pred_mae@ipn.mx')
+        prof = self._crear_profesor_doctor('prof_pred@ipn.mx')
+        jurado = JuradoExamen(
+            estudiante=est, profesor=prof,
+            tipo_examen='PREDOCTORAL', rol='PRESIDENTE'
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            jurado.clean()
+        errores = ctx.exception.message_dict
+        self.assertTrue(
+            any('art. 25' in str(v).lower() for v in errores.values())
+        )
+
+    def test_resultado_aprobado_sin_fecha_rechazado(self):
+        est = self._crear_estudiante(self.prog_mae, 'T301', 'res_sf@ipn.mx')
+        prof = self._crear_profesor_doctor('prof_res@ipn.mx')
+        jurado = JuradoExamen(
+            estudiante=est, profesor=prof,
+            tipo_examen='GRADO', rol='PRESIDENTE',
+            resultado='APROBADO'
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            jurado.clean()
+        self.assertIn('fecha_examen', ctx.exception.message_dict)

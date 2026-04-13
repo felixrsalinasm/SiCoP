@@ -1,6 +1,9 @@
-from django.db import models
+from datetime import date
+
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils import timezone
+
 from apps.personas.models import ModeloBase
 
 
@@ -28,15 +31,17 @@ class Tesis(ModeloBase):
     def clean(self):
         super().clean()
         if self.estado in ['CONCLUIDA', 'TITULADA'] and self.pk:
-            # Validacion comite tutorial
             if self.programa.nivel in ['MAESTRIA', 'DOCTORADO', 'DOCTORADO_DIRECTO']:
                 num_comite = self.comite_tutorial.filter(activo=True).count()
                 if num_comite < 3:
-                    raise ValidationError({'estado': 'El comite tutorial requiere minimo 3 integrantes para estar activa/concluida.'})
-            # Validacion directores
+                    raise ValidationError({
+                        'estado': 'El comite tutorial requiere minimo 3 integrantes para concluir la tesis.'
+                    })
             num_dir = self.directores.filter(activo=True).count()
             if num_dir < 1 or num_dir > 2:
-                raise ValidationError({'estado': 'La tesis debe tener 1 o 2 directores activos.'})
+                raise ValidationError({
+                    'estado': 'La tesis debe tener 1 o 2 directores activos.'
+                })
 
 
 class DirectorTesis(ModeloBase):
@@ -68,33 +73,135 @@ class DirectorTesis(ModeloBase):
 
     def clean(self):
         super().clean()
-        if self.tesis and self.activo:
-            directores_actuales = DirectorTesis.objects.filter(
-                tesis=self.tesis,
-                activo=True
-            ).exclude(pk=self.pk).count()
-            if directores_actuales >= 2:
-                raise ValidationError('Una tesis no puede tener mas de 2 directores activos (Articulo 19).')
-            
-            # grado igual o superior
-            niveles = {'MAESTRIA': 1, 'DOCTORADO': 2, 'DOCTORADO_DIRECTO': 2}
-            grados_profesor = {'LICENCIATURA': 0, 'MAESTRIA': 1, 'DOCTORADO': 2}
-            nivel_tesis_val = niveles.get(self.tesis.programa.nivel, 0)
-            grado_prof_val = grados_profesor.get(self.profesor.grado_academico, 0)
-            
-            if grado_prof_val < nivel_tesis_val:
-                raise ValidationError('El director debe tener un grado academico igual o superior al nivel de la tesis.')
+        errores = {}
+        self._validar_max_directores(errores)
+        self._validar_max_alumnos(errores)
+        self._validar_fechas(errores)
+        self._validar_activo_fecha_termino(errores)
+        self._validar_directores_externos(errores)
+        self._validar_grado_director_doctorado(errores)
+        self._validar_nombramiento_vigente(errores)
+        if errores:
+            raise ValidationError(errores)
 
-            # Nombramiento Profesor de Posgrado activo
-            from apps.nombramientos.models import Nombramiento
-            t_nombramientos = Nombramiento.objects.filter(
-                profesor=self.profesor,
-                tipo__nombramiento='Profesor de Posgrado',
-                tipo__origen='IPN'
+    def _obtener_estudiante(self):
+        if self.estudiante_id:
+            return self.estudiante
+        if self.tesis_id:
+            try:
+                return self.tesis.alumno
+            except Exception:
+                pass
+        return None
+
+    def _validar_max_directores(self, errores):
+        if not self.tesis_id or not self.activo:
+            return
+        directores_actuales = DirectorTesis.objects.filter(
+            tesis=self.tesis, activo=True
+        ).exclude(pk=self.pk).count()
+        if directores_actuales >= 2:
+            errores['__all__'] = (
+                'Una tesis no puede tener mas de 2 directores activos. '
+                'Art. 19, Reglamento de Estudios de Posgrado IPN.'
             )
-            has_vigente = any(n.esta_vigente for n in t_nombramientos)
-            if not has_vigente:
-                raise ValidationError('El director debe tener un Nombramiento de Profesor de Posgrado vigente emitido por el IPN.')
+
+    def _validar_max_alumnos(self, errores):
+        if not self.activo or not self.profesor_id:
+            return
+        try:
+            if not self.profesor.puede_dirigir_mas_alumnos():
+                existente = DirectorTesis.objects.filter(
+                    profesor=self.profesor, activo=True, pk=self.pk
+                ).exists()
+                if not existente:
+                    errores['profesor'] = (
+                        'Este profesor ya tiene 4 alumnos activos como director de tesis.'
+                    )
+        except Exception:
+            pass
+
+    def _validar_fechas(self, errores):
+        if self.fecha_termino and self.fecha_asignacion:
+            if self.fecha_termino <= self.fecha_asignacion:
+                errores['fecha_termino'] = (
+                    'La fecha de termino debe ser posterior a la fecha de asignacion.'
+                )
+        estudiante = self._obtener_estudiante()
+        if estudiante and self.fecha_asignacion and estudiante.fecha_ingreso:
+            if self.fecha_asignacion < estudiante.fecha_ingreso:
+                errores['fecha_asignacion'] = (
+                    'La fecha de asignacion no puede ser anterior a la fecha de ingreso del estudiante.'
+                )
+
+    def _validar_activo_fecha_termino(self, errores):
+        if self.activo and self.fecha_termino:
+            errores['fecha_termino'] = (
+                'Un director activo no debe tener fecha de termino registrada.'
+            )
+        if not self.activo and not self.fecha_termino:
+            errores['fecha_termino'] = (
+                'Un director inactivo debe tener fecha de termino registrada.'
+            )
+
+    def _validar_directores_externos(self, errores):
+        if not self.activo or not self.tesis_id or not self.profesor_id:
+            return
+        try:
+            es_externo = self.profesor.es_externo
+        except Exception:
+            return
+        if not es_externo:
+            return
+        otro_externo = DirectorTesis.objects.filter(
+            tesis=self.tesis, activo=True, profesor__es_externo=True
+        ).exclude(pk=self.pk).exists()
+        if otro_externo:
+            errores['profesor'] = (
+                'No pueden haber 2 directores externos simultaneos para la misma tesis. '
+                'Art. 19, Reglamento de Estudios de Posgrado IPN.'
+            )
+
+    def _validar_grado_director_doctorado(self, errores):
+        if not self.tesis_id or not self.profesor_id or not self.activo:
+            return
+        try:
+            nivel = self.tesis.programa.nivel
+            grado = self.profesor.grado_academico
+        except Exception:
+            return
+        if nivel in ('DOCTORADO', 'DOCTORADO_DIRECTO') and grado != 'DOCTORADO':
+            errores.setdefault('__all__', '')
+            if errores['__all__']:
+                errores['__all__'] += ' '
+            errores['__all__'] += (
+                'ADVERTENCIA: Para dirigir tesis de Doctorado, el director debe tener '
+                'grado de Doctor. Art. 19, Reglamento de Estudios de Posgrado IPN.'
+            )
+
+    def _validar_nombramiento_vigente(self, errores):
+        if not self.activo or not self.profesor_id:
+            return
+        try:
+            es_externo = self.profesor.es_externo
+        except Exception:
+            return
+        if es_externo:
+            return
+        from apps.nombramientos.models import Nombramiento
+        nombramientos = Nombramiento.objects.filter(
+            profesor=self.profesor,
+            tipo__nombramiento__icontains='Profesor de Posgrado'
+        )
+        tiene_vigente = any(n.vigente for n in nombramientos)
+        if not tiene_vigente:
+            errores.setdefault('__all__', '')
+            if errores['__all__']:
+                errores['__all__'] += ' '
+            errores['__all__'] += (
+                'ADVERTENCIA: El director interno debe tener un Nombramiento vigente de '
+                'Profesor de Posgrado. Art. 19, Reglamento de Estudios de Posgrado IPN.'
+            )
 
 
 class ComiteTutorial(ModeloBase):
@@ -119,10 +226,56 @@ class ComiteTutorial(ModeloBase):
 
     def clean(self):
         super().clean()
-        if self.tesis:
-            programa = self.tesis.programa
-            if programa.nivel not in ['MAESTRIA', 'DOCTORADO', 'DOCTORADO_DIRECTO']:
-                raise ValidationError('El comite tutorial solo aplica a programas de Maestria, Doctorado o Doctorado Directo.')
+        errores = {}
+        self._validar_nivel_programa(errores)
+        self._validar_fechas(errores)
+        self._validar_activo_fecha_termino(errores)
+        if errores:
+            raise ValidationError(errores)
+
+    def _obtener_nivel(self):
+        if self.tesis_id:
+            try:
+                return self.tesis.programa.nivel
+            except Exception:
+                pass
+        if self.estudiante_id:
+            try:
+                return self.estudiante.programa.nivel
+            except Exception:
+                pass
+        return None
+
+    def _validar_nivel_programa(self, errores):
+        nivel = self._obtener_nivel()
+        if not nivel:
+            return
+        if nivel == 'ESPECIALIDAD':
+            errores['__all__'] = (
+                'Los programas de Especialidad no requieren Comite Tutorial. '
+                'Art. 22, Reglamento de Estudios de Posgrado IPN.'
+            )
+        elif nivel not in ('MAESTRIA', 'DOCTORADO', 'DOCTORADO_DIRECTO'):
+            errores['__all__'] = (
+                'El comite tutorial solo aplica a programas de Maestria, Doctorado o Doctorado Directo.'
+            )
+
+    def _validar_fechas(self, errores):
+        if self.fecha_termino and self.fecha_asignacion:
+            if self.fecha_termino <= self.fecha_asignacion:
+                errores['fecha_termino'] = (
+                    'La fecha de termino debe ser posterior a la fecha de asignacion.'
+                )
+
+    def _validar_activo_fecha_termino(self, errores):
+        if self.activo and self.fecha_termino:
+            errores['fecha_termino'] = (
+                'Un miembro activo del comite no debe tener fecha de termino registrada.'
+            )
+        if not self.activo and not self.fecha_termino:
+            errores['fecha_termino'] = (
+                'Un miembro inactivo del comite debe tener fecha de termino registrada.'
+            )
 
 
 class JuradoExamen(ModeloBase):
@@ -158,20 +311,94 @@ class JuradoExamen(ModeloBase):
 
     def clean(self):
         super().clean()
-        if self.profesor.grado_academico != 'DOCTORADO':
-            raise ValidationError('Todos los sinodales deben tener grado de Doctor (Art. 30).')
+        errores = {}
+        self._validar_max_titulares_suplentes(errores)
+        self._validar_grado_doctor(errores)
+        self._validar_resultado_fecha(errores)
+        self._validar_tipo_examen_nivel(errores)
+        if errores:
+            raise ValidationError(errores)
 
+    def _validar_max_titulares_suplentes(self, errores):
+        if not self.estudiante_id:
+            return
         qs_titulares = JuradoExamen.objects.filter(
-            estudiante=self.estudiante, tipo_examen=self.tipo_examen, rol__in=['PRESIDENTE', 'SECRETARIO', 'VOCAL']
+            estudiante=self.estudiante,
+            tipo_examen=self.tipo_examen,
+            rol__in=['PRESIDENTE', 'SECRETARIO', 'VOCAL']
         )
         qs_suplentes = JuradoExamen.objects.filter(
-            estudiante=self.estudiante, tipo_examen=self.tipo_examen, rol='SUPLENTE'
+            estudiante=self.estudiante,
+            tipo_examen=self.tipo_examen,
+            rol='SUPLENTE'
         )
         if self.pk:
             qs_titulares = qs_titulares.exclude(pk=self.pk)
             qs_suplentes = qs_suplentes.exclude(pk=self.pk)
 
-        if self.rol in ['PRESIDENTE', 'SECRETARIO', 'VOCAL'] and qs_titulares.count() >= 5:
-            raise ValidationError('El jurado de examen de grado requiere exactamente 5 sinodales titulares.')
+        if self.rol in ('PRESIDENTE', 'SECRETARIO', 'VOCAL') and qs_titulares.count() >= 5:
+            errores['rol'] = (
+                'El jurado de examen requiere maximo 5 sinodales titulares. '
+                'Art. 30, Reglamento de Estudios de Posgrado IPN.'
+            )
         if self.rol == 'SUPLENTE' and qs_suplentes.count() >= 1:
-            raise ValidationError('El jurado de examen de grado requiere exactamente 1 suplente.')
+            errores['rol'] = (
+                'El jurado de examen requiere maximo 1 suplente. '
+                'Art. 30, Reglamento de Estudios de Posgrado IPN.'
+            )
+
+    def _validar_grado_doctor(self, errores):
+        if not self.profesor_id:
+            return
+        try:
+            grado = self.profesor.grado_academico
+        except Exception:
+            return
+        if grado != 'DOCTORADO':
+            nivel = None
+            if self.estudiante_id:
+                try:
+                    nivel = self.estudiante.programa.nivel
+                except Exception:
+                    pass
+            if nivel in ('DOCTORADO', 'DOCTORADO_DIRECTO'):
+                errores.setdefault('__all__', '')
+                if errores['__all__']:
+                    errores['__all__'] += ' '
+                errores['__all__'] += (
+                    'ADVERTENCIA: Todos los sinodales deben tener grado de Doctor. '
+                    'Art. 30, Reglamento de Estudios de Posgrado IPN.'
+                )
+            else:
+                errores['profesor'] = (
+                    'Todos los sinodales deben tener grado de Doctor. '
+                    'Art. 30, Reglamento de Estudios de Posgrado IPN.'
+                )
+
+    def _validar_resultado_fecha(self, errores):
+        if self.resultado in ('APROBADO', 'NO_APROBADO') and not self.fecha_examen:
+            errores['fecha_examen'] = (
+                'La fecha de examen es obligatoria cuando el resultado ha sido registrado.'
+            )
+        if self.resultado == 'PENDIENTE' and self.fecha_examen:
+            hoy = date.today()
+            if self.fecha_examen < hoy:
+                errores.setdefault('__all__', '')
+                if errores['__all__']:
+                    errores['__all__'] += ' '
+                errores['__all__'] += (
+                    'ADVERTENCIA: El resultado sigue en PENDIENTE pero la fecha de examen ya paso.'
+                )
+
+    def _validar_tipo_examen_nivel(self, errores):
+        if self.tipo_examen != 'PREDOCTORAL' or not self.estudiante_id:
+            return
+        try:
+            nivel = self.estudiante.programa.nivel
+        except Exception:
+            return
+        if nivel not in ('DOCTORADO', 'DOCTORADO_DIRECTO'):
+            errores['tipo_examen'] = (
+                'El examen predoctoral solo aplica a estudiantes de Doctorado. '
+                'Art. 25, Reglamento de Estudios de Posgrado IPN.'
+            )

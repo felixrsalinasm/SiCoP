@@ -10,12 +10,16 @@ admin.site.site_title = settings.ADMIN_SITE_TITLE
 admin.site.index_title = settings.ADMIN_INDEX_TITLE
 
 
+def vista_403(request, exception):
+    return render(request, '403.html', status=403)
+
+
 def vista_404(request, exception):
     return render(request, '404.html', status=404)
 
 
-def vista_403(request, exception):
-    return render(request, '403.html', status=403)
+def vista_500(request):
+    return render(request, '500.html', status=500)
 
 
 urlpatterns = [
@@ -29,8 +33,9 @@ urlpatterns = [
     path('historial/', include('apps.historial.urls')),
 ]
 
-handler404 = vista_404
 handler403 = vista_403
+handler404 = vista_404
+handler500 = vista_500
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
