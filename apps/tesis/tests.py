@@ -103,6 +103,20 @@ class TestDirectorTesisValidaciones(TestCase):
         with self.assertRaises(ValidationError):
             dir3.clean()
 
+    def test_director_inactivo_sin_fecha_termino_rechazado(self):
+        prof_int = self._crear_profesor('Inact', 'T', 'inact@ipn.mx')
+        Nombramiento.objects.create(
+            profesor=prof_int, tipo=self.tipo_pp,
+            clave='PPC-INACT', fecha_emision=date(2024, 1, 1)
+        )
+        director = DirectorTesis(
+            tesis=self.tesis, profesor=prof_int,
+            fecha_asignacion=date(2024, 9, 1), activo=False
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            director.clean()
+        self.assertIn('fecha_termino', ctx.exception.message_dict)
+
 
 class TestComiteTutorialValidaciones(TestCase):
     def test_especialidad_rechazada(self):

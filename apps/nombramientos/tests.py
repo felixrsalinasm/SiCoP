@@ -1,8 +1,13 @@
+from datetime import date
+
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.test import TestCase, Client
 from django.urls import reverse
 
 from apps.cuentas.models import Usuario
+from apps.nombramientos.models import Nombramiento, CatTipoNombramiento
+from apps.personas.models import Persona, Profesor
 
 
 class TestNombramientos(TestCase):
@@ -35,3 +40,27 @@ class TestNombramientos(TestCase):
         self.cliente.login(username='prof1', password='pass')
         respuesta = self.cliente.get(reverse('nombramientos:exportar_nombramientos_csv'))
         self.assertEqual(respuesta.status_code, 403)
+
+
+class TestNombramientoValidaciones(TestCase):
+    def setUp(self):
+        self.tipo = CatTipoNombramiento.objects.create(
+            nombramiento='Profesor de Posgrado Colegiado', origen='IPN'
+        )
+        persona = Persona.objects.create(
+            paterno='Nomb', materno='Val', nombres='Test', email='nomb_val@ipn.mx'
+        )
+        self.profesor = Profesor.objects.create(
+            persona=persona, grado_academico='DOCTORADO', activo=True
+        )
+
+    def test_fecha_vencimiento_anterior_a_emision_rechazada(self):
+        nom = Nombramiento(
+            profesor=self.profesor, tipo=self.tipo, clave='PPC-VAL',
+            fecha_emision=date(2024, 6, 1),
+            fecha_vencimiento=date(2024, 1, 1)
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            nom.clean()
+        self.assertIn('fecha_vencimiento', ctx.exception.message_dict)
+
